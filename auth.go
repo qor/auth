@@ -7,29 +7,37 @@ import (
 	jwt "github.com/dgrijalva/jwt-go"
 )
 
-type Claims struct {
-	Username string `json:"username,omitempty"`
-	jwt.StandardClaims
-}
-
 type Auth struct {
+	*Config
 }
 
-func (*Auth) SignedToken(claims Claims) string {
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	signedToken, _ := token.SignedString([]byte("secret"))
+type Config struct {
+	SigningMethod jwt.SigningMethod
+	SignedString  string
+}
+
+func New(config *Config) *Auth {
+	if config.SigningMethod == nil {
+		config.SigningMethod = jwt.SigningMethodHS256
+	}
+
+	return &Auth{Config: config}
+}
+
+func (auth *Auth) SignedToken(claims Claims) string {
+	token := jwt.NewWithClaims(auth.SigningMethod, claims)
+	signedToken, _ := token.SignedString([]byte(auth.SignedString))
 
 	return signedToken
 }
 
-func (*Auth) Validate(tokenString string) (*Claims, error) {
-	if token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+func (auth *Auth) Validate(tokenString string) (*Claims, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
+		if token.Method != auth.Config.SigningMethod {
 			return nil, fmt.Errorf("Unexpected signing method")
 		}
-		return []byte("secret"), nil
-	}); err == nil {
-	}
+		return []byte(auth.Config.SignedString), nil
+	})
 
 	if err != nil {
 		return nil, err
