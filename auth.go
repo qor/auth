@@ -24,7 +24,10 @@ func New(config *Config) *Auth {
 	return &Auth{Config: config}
 }
 
-func (auth *Auth) SignedToken(claims Claims) string {
+func (auth *Auth) SignedToken(claims *Claims) string {
+	// TODO
+	// update based on configuration claims.ExpiresAt
+
 	token := jwt.NewWithClaims(auth.SigningMethod, claims)
 	signedToken, _ := token.SignedString([]byte(auth.SignedString))
 
