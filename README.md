@@ -9,8 +9,8 @@ QOR authentication solution
   * Confirm
   * Reset Password
   * Captcha
+  * JWT
 * Phone / Verification Code
 * Http Auth ?
-* JWT
 * OAuth
 * OpenID
