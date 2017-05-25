@@ -9,6 +9,7 @@ import (
 
 type Auth struct {
 	*Config
+	providers map[string]Provider
 }
 
 type Config struct {
@@ -24,6 +25,17 @@ func New(config *Config) *Auth {
 	return &Auth{Config: config}
 }
 
+// RegisterProvider register auth provider
+func (auth *Auth) RegisterProvider(name string, provider Provider) {
+	auth.providers[name] = provider
+}
+
+// GetProvider get provider with name
+func (auth *Auth) GetProvider(name string) Provider {
+	return auth.providers[name]
+}
+
+// SignedToken generate signed token with Claims
 func (auth *Auth) SignedToken(claims *Claims) string {
 	// TODO
 	// update based on configuration claims.ExpiresAt
@@ -34,6 +46,7 @@ func (auth *Auth) SignedToken(claims *Claims) string {
 	return signedToken
 }
 
+// Validate validate auth token
 func (auth *Auth) Validate(tokenString string) (*Claims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
 		if token.Method != auth.Config.SigningMethod {

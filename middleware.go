@@ -29,9 +29,13 @@ func (auth *Auth) Restrict(h http.Handler, permission *roles.Permission) http.Ha
 		claims, err := auth.Validate(tokenString)
 
 		if err == nil {
-			// get current user
-			if currentUser != nil {
-				r.WithContext(context.WithValue(r.Context(), CurrentUser, currentUser))
+			if provider := auth.GetProvider(claims.Type); provider != nil {
+				currentUser = provider.CurrentUserFinder(r, claims)
+
+				// get current user
+				if currentUser != nil {
+					r.WithContext(context.WithValue(r.Context(), CurrentUser, currentUser))
+				}
 			}
 		}
 
