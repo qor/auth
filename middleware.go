@@ -9,18 +9,34 @@ import (
 
 const CurrentUser string = "CurrentUser"
 
-func (*Auth) Restrict(h http.Handler, permission *roles.Permission) http.Handler {
+func (auth *Auth) Restrict(h http.Handler, permission *roles.Permission) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// get current user
-		var currentUser interface{}
-		var hasPermission bool
+		// Get Token from Header
+		var (
+			currentUser   interface{}
+			hasPermission bool
+			matchedRoles  []string
+			tokenString   = r.Header.Get("Authorization")
+		)
 
-		if currentUser != nil {
-			r.WithContext(context.WithValue(r.Context(), CurrentUser, currentUser))
+		// Get Token from Cookie
+		if tokenString == "" {
+			if cookie, err := r.Cookie("_session"); err == nil {
+				tokenString = cookie.Value
+			}
+		}
+
+		claims, err := auth.Validate(tokenString)
+
+		if err == nil {
+			// get current user
+			if currentUser != nil {
+				r.WithContext(context.WithValue(r.Context(), CurrentUser, currentUser))
+			}
 		}
 
 		// get current user roles
-		matchedRoles := permission.Role.MatchedRoles(r, currentUser)
+		matchedRoles = permission.Role.MatchedRoles(r, currentUser)
 
 		switch r.Method {
 		case "GET":
