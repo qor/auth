@@ -50,7 +50,7 @@ func (auth *Auth) SignedToken(claims *Claims) string {
 func (auth *Auth) Validate(tokenString string) (*Claims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
 		if token.Method != auth.Config.SigningMethod {
-			return nil, fmt.Errorf("Unexpected signing method")
+			return nil, fmt.Errorf("unexpected signing method")
 		}
 		return []byte(auth.Config.SignedString), nil
 	})

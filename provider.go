@@ -3,5 +3,6 @@ package auth
 import "net/http"
 
 type Provider interface {
-	CurrentUserFinder(*http.Request, *Claims) interface{}
+	GetCurrentUser(*http.Request, http.ResponseWriter, *Claims) interface{}
+	DestroyCurrentSession(*http.Request, http.ResponseWriter, *Claims) error
 }
