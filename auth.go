@@ -26,11 +26,16 @@ func New(config *Config) *Auth {
 		config.SigningMethod = jwt.SigningMethodHS256
 	}
 
-	return &Auth{Config: config}
+	return &Auth{Config: config, providers: map[string]Provider{}}
 }
 
 // RegisterProvider register auth provider
-func (auth *Auth) RegisterProvider(name string, provider Provider) {
+func (auth *Auth) RegisterProvider(provider Provider) {
+	name := provider.GetProviderName()
+	if _, ok := auth.providers[name]; ok {
+		fmt.Printf("warning: auth provider %v already registered", name)
+	}
+
 	auth.providers[name] = provider
 }
 

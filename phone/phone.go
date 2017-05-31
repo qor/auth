@@ -6,6 +6,10 @@ import (
 	"github.com/qor/auth"
 )
 
+func New() *PhoneProvider {
+	return &PhoneProvider{}
+}
+
 // PhoneProvider provide login with phone method
 type PhoneProvider struct {
 }

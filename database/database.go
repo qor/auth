@@ -6,6 +6,10 @@ import (
 	"github.com/qor/auth"
 )
 
+func New() *DatabaseProvider {
+	return &DatabaseProvider{}
+}
+
 // DatabaseProvider provide login with database method
 type DatabaseProvider struct {
 }

@@ -6,6 +6,10 @@ import (
 	"github.com/qor/auth"
 )
 
+func New() *TwitterProvider {
+	return &TwitterProvider{}
+}
+
 // twitterProvider provide login with twitter method
 type TwitterProvider struct {
 }
