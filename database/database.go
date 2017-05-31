@@ -10,6 +10,11 @@ import (
 type DatabaseProvider struct {
 }
 
+// GetProviderName return provider name
+func (DatabaseProvider) GetProviderName() string {
+	return "database"
+}
+
 // Login implemented login with phone provider
 func (DatabaseProvider) Login(request *http.Request, writer http.ResponseWriter, claims *auth.Claims) {
 }

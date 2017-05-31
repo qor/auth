@@ -1,8 +1,5 @@
 package phone
 
-	GetCurrentUser(*http.Request, http.ResponseWriter, *Claims) interface{}
-	DestroyCurrentSession(*http.Request, http.ResponseWriter, *Claims) error
-
 import (
 	"net/http"
 
@@ -11,6 +8,11 @@ import (
 
 // PhoneProvider provide login with phone method
 type PhoneProvider struct {
+}
+
+// GetProviderName return provider name
+func (PhoneProvider) GetProviderName() string {
+	return "phone"
 }
 
 // Login implemented login with phone provider
