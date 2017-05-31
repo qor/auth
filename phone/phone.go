@@ -1,5 +1,8 @@
 package phone
 
+	GetCurrentUser(*http.Request, http.ResponseWriter, *Claims) interface{}
+	DestroyCurrentSession(*http.Request, http.ResponseWriter, *Claims) error
+
 import (
 	"net/http"
 

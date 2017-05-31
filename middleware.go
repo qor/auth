@@ -30,7 +30,7 @@ func (auth *Auth) Restrict(h http.Handler, permission *roles.Permission) http.Ha
 
 		if err == nil {
 			if provider := auth.GetProvider(claims.Type); provider != nil {
-				currentUser = provider.GetCurrentUser(r, w, claims)
+				currentUser = nil // provider.GetCurrentUser(r, w, claims)
 
 				// get current user
 				if currentUser != nil {

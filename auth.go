@@ -18,6 +18,10 @@ type Config struct {
 }
 
 func New(config *Config) *Auth {
+	if config == nil {
+		config = &Config{}
+	}
+
 	if config.SigningMethod == nil {
 		config.SigningMethod = jwt.SigningMethodHS256
 	}

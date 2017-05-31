@@ -3,6 +3,8 @@ package auth
 import "net/http"
 
 type Provider interface {
-	GetCurrentUser(*http.Request, http.ResponseWriter, *Claims) interface{}
-	DestroyCurrentSession(*http.Request, http.ResponseWriter, *Claims) error
+	GetProviderName() string
+	Login(request *http.Request, writer http.ResponseWriter, claims *Claims)
+	Logout(request *http.Request, writer http.ResponseWriter, claims *Claims)
+	Register(request *http.Request, writer http.ResponseWriter, claims *Claims)
 }
