@@ -2,9 +2,13 @@ package auth
 
 import "net/http"
 
+// Provider define Provider interface
 type Provider interface {
 	GetProviderName() string
-	Login(request *http.Request, writer http.ResponseWriter, claims *Claims)
-	Logout(request *http.Request, writer http.ResponseWriter, claims *Claims)
-	Register(request *http.Request, writer http.ResponseWriter, claims *Claims)
+
+	Login(*http.Request, http.ResponseWriter, *Claims)
+	Logout(*http.Request, http.ResponseWriter, *Claims)
+	Register(*http.Request, http.ResponseWriter, *Claims)
+	Callback(*http.Request, http.ResponseWriter, *Claims)
+	ServeHTTP(*http.Request, http.ResponseWriter, *Claims)
 }
