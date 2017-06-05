@@ -11,7 +11,7 @@ import (
 type Auth struct {
 	*Config
 	providers map[string]Provider
-	viewpaths []string
+	viewPaths []string
 }
 
 type Config struct {
@@ -42,7 +42,7 @@ func New(config *Config) *Auth {
 
 // RegisterViewPath register view path
 func (auth *Auth) RegisterViewPath(pth string) {
-	auth.viewpaths = append(auth.viewpaths, pth)
+	auth.viewPaths = append(auth.viewPaths, pth)
 	auth.Config.AssetFileSystem.RegisterPath(pth)
 }
 
