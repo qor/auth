@@ -29,6 +29,12 @@ func New(config *Config) *Auth {
 		config.SigningMethod = jwt.SigningMethodHS256
 	}
 
+	if config.Render == nil {
+		config.Render = render.New()
+	}
+
+	config.Render.RegisterViewPath("github.com/qor/auth/views")
+
 	auth := &Auth{Config: config, providers: map[string]Provider{}}
 
 	return auth

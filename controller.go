@@ -42,19 +42,25 @@ func (serveMux *serveMux) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 			default:
 				provider.ServeHTTP(req, w, claims)
 			}
+			return
 		}
-	} else if len(paths) == 0 {
+	} else if len(paths) == 1 {
 		// eg: /login, /logout
 
 		switch paths[0] {
 		case "login":
 			// render login page
 			serveMux.Auth.Render.Execute("auth/login", nil, req, w)
+			return
 		case "logout":
 			// destroy login session
+			return
 		case "register":
 			// render register page
 			serveMux.Auth.Render.Execute("auth/register", nil, req, w)
+			return
 		}
 	}
+
+	http.NotFound(w, req)
 }
