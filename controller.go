@@ -52,12 +52,12 @@ func (serveMux *serveMux) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		switch paths[0] {
 		case "login":
 			// render login page
-			serveMux.Authrender(w, "auth/login")
+			serveMux.Auth.render(w, "auth/login")
 		case "logout":
 			// destroy login session
 		case "register":
 			// render register page
-			serveMux.Authrender(w, "auth/register")
+			serveMux.Auth.render(w, "auth/register")
 		}
 	}
 }

@@ -19,6 +19,10 @@ func (TwitterProvider) GetProviderName() string {
 	return "twitter"
 }
 
+// ConfigAuth implemented ConfigAuth for twitter provider
+func (TwitterProvider) ConfigAuth(*auth.Auth) {
+}
+
 // Login implemented login with twitter provider
 func (TwitterProvider) Login(request *http.Request, writer http.ResponseWriter, claims *auth.Claims) {
 }
@@ -29,4 +33,12 @@ func (TwitterProvider) Logout(request *http.Request, writer http.ResponseWriter,
 
 // Register implemented register with twitter provider
 func (TwitterProvider) Register(request *http.Request, writer http.ResponseWriter, claims *auth.Claims) {
+}
+
+// Callback implement Callback with twitter provider
+func (TwitterProvider) Callback(*http.Request, http.ResponseWriter, *auth.Claims) {
+}
+
+// ServeHTTP implement ServeHTTP with twitter provider
+func (TwitterProvider) ServeHTTP(*http.Request, http.ResponseWriter, *auth.Claims) {
 }

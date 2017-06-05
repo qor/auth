@@ -19,6 +19,10 @@ func (PhoneProvider) GetProviderName() string {
 	return "phone"
 }
 
+// ConfigAuth implemented ConfigAuth for phone provider
+func (PhoneProvider) ConfigAuth(*auth.Auth) {
+}
+
 // Login implemented login with phone provider
 func (PhoneProvider) Login(request *http.Request, writer http.ResponseWriter, claims *auth.Claims) {
 }
@@ -29,4 +33,12 @@ func (PhoneProvider) Logout(request *http.Request, writer http.ResponseWriter, c
 
 // Register implemented register with phone provider
 func (PhoneProvider) Register(request *http.Request, writer http.ResponseWriter, claims *auth.Claims) {
+}
+
+// Callback implement Callback with phone provider
+func (PhoneProvider) Callback(*http.Request, http.ResponseWriter, *auth.Claims) {
+}
+
+// ServeHTTP implement ServeHTTP with phone provider
+func (PhoneProvider) ServeHTTP(*http.Request, http.ResponseWriter, *auth.Claims) {
 }
