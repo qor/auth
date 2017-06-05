@@ -3,10 +3,7 @@ package auth
 import (
 	"fmt"
 	"net/http"
-	"path/filepath"
 	"strings"
-
-	"github.com/alecthomas/template"
 )
 
 // NewServeMux generate http.Handler for auth
@@ -52,22 +49,12 @@ func (serveMux *serveMux) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		switch paths[0] {
 		case "login":
 			// render login page
-			serveMux.Auth.render(w, "auth/login")
+			serveMux.Auth.Render.Execute("auth/login", nil, req, w)
 		case "logout":
 			// destroy login session
 		case "register":
 			// render register page
-			serveMux.Auth.render(w, "auth/register")
-		}
-	}
-}
-
-func (auth *Auth) render(w http.ResponseWriter, file string) {
-	if content, err := auth.AssetFileSystem.Asset(file + ".tmpl"); err == nil {
-		if tmpl, err := template.New(filepath.Base(file)).Parse(string(content)); err == nil {
-			if err = tmpl.Execute(w, nil); err != nil {
-				w.Write([]byte(err.Error()))
-			}
+			serveMux.Auth.Render.Execute("auth/register", nil, req, w)
 		}
 	}
 }

@@ -5,19 +5,18 @@ import (
 	"fmt"
 
 	jwt "github.com/dgrijalva/jwt-go"
-	"github.com/qor/admin"
+	"github.com/qor/render"
 )
 
 type Auth struct {
 	*Config
 	providers map[string]Provider
-	viewPaths []string
 }
 
 type Config struct {
-	SigningMethod   jwt.SigningMethod
-	SignedString    string
-	AssetFileSystem admin.AssetFSInterface
+	Render        *render.Render
+	SigningMethod jwt.SigningMethod
+	SignedString  string
 }
 
 // New initialize Auth
@@ -30,29 +29,9 @@ func New(config *Config) *Auth {
 		config.SigningMethod = jwt.SigningMethodHS256
 	}
 
-	if config.AssetFileSystem == nil {
-		config.AssetFileSystem = &admin.AssetFileSystem{}
-	}
-
 	auth := &Auth{Config: config, providers: map[string]Provider{}}
-	auth.RegisterViewPath("app/views")
 
 	return auth
-}
-
-// RegisterViewPath register view path
-func (auth *Auth) RegisterViewPath(pth string) {
-	auth.viewPaths = append(auth.viewPaths, pth)
-	auth.Config.AssetFileSystem.RegisterPath(pth)
-}
-
-// SetAssetFS set asset fs for render
-func (auth *Auth) SetAssetFS(assetFS admin.AssetFSInterface) {
-	for _, viewPath := range auth.viewPaths {
-		assetFS.RegisterPath(viewPath)
-	}
-
-	auth.AssetFileSystem = assetFS
 }
 
 // RegisterProvider register auth provider
