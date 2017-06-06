@@ -3,6 +3,7 @@ package auth
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/qor/render"
@@ -14,6 +15,7 @@ type Auth struct {
 }
 
 type Config struct {
+	Prefix        string
 	Render        *render.Render
 	SigningMethod jwt.SigningMethod
 	SignedString  string
@@ -31,6 +33,12 @@ func New(config *Config) *Auth {
 
 	if config.Render == nil {
 		config.Render = render.New()
+	}
+
+	if config.Prefix == "" {
+		config.Prefix = "/auth/"
+	} else {
+		config.Prefix = fmt.Sprintf("/%v/", strings.Trim(config.Prefix, "/"))
 	}
 
 	config.Render.RegisterViewPath("github.com/qor/auth/views")

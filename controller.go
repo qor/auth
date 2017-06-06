@@ -1,20 +1,17 @@
 package auth
 
 import (
-	"fmt"
 	"net/http"
 	"strings"
 )
 
 // NewServeMux generate http.Handler for auth
-func (auth *Auth) NewServeMux(prefix string) http.Handler {
-	prefix = fmt.Sprintf("/%v/", strings.Trim(prefix, "/"))
-	return &serveMux{Auth: auth, Prefix: prefix}
+func (auth *Auth) NewServeMux() http.Handler {
+	return &serveMux{Auth: auth}
 }
 
 type serveMux struct {
-	Auth   *Auth
-	Prefix string
+	*Auth
 }
 
 // ServeHTTP dispatches the handler registered in the matched route
