@@ -14,8 +14,8 @@ func New() *PhoneProvider {
 type PhoneProvider struct {
 }
 
-// GetProviderName return provider name
-func (PhoneProvider) GetProviderName() string {
+// GetName return provider name
+func (PhoneProvider) GetName() string {
 	return "phone"
 }
 

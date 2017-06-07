@@ -14,8 +14,8 @@ func New() *DatabaseProvider {
 type DatabaseProvider struct {
 }
 
-// GetProviderName return provider name
-func (DatabaseProvider) GetProviderName() string {
+// GetName return provider name
+func (DatabaseProvider) GetName() string {
 	return "database"
 }
 

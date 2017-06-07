@@ -50,12 +50,20 @@ func New(config *Config) *Auth {
 
 // RegisterProvider register auth provider
 func (auth *Auth) RegisterProvider(provider Provider) {
-	name := provider.GetProviderName()
+	name := provider.GetName()
 	if _, ok := auth.providers[name]; ok {
 		fmt.Printf("warning: auth provider %v already registered", name)
 	}
 
 	auth.providers[name] = provider
+}
+
+// GetProviders return registered providers
+func (auth *Auth) GetProviders() (providers []Provider) {
+	for _, provider := range auth.providers {
+		providers = append(providers, provider)
+	}
+	return
 }
 
 // GetProvider get provider with name

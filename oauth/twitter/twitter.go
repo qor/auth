@@ -14,8 +14,8 @@ func New() *TwitterProvider {
 type TwitterProvider struct {
 }
 
-// GetProviderName return provider name
-func (TwitterProvider) GetProviderName() string {
+// GetName return provider name
+func (TwitterProvider) GetName() string {
 	return "twitter"
 }
 
