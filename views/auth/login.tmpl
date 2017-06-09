@@ -2,9 +2,11 @@
   <h2>Log in</h2>
 
   <div>
-    render all providers's login form
-
-    {{.Config.GetProviders}}
+    <div>
+      {{range $provider := .Result.GetProviders}}
+        <div>Login with {{$provider.GetName}}</div>
+      {{end}}
+    </div>
   </div>
 
   <div>
