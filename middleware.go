@@ -21,7 +21,7 @@ func (auth *Auth) Restrict(h http.Handler, permission *roles.Permission) http.Ha
 
 		// Get Token from Cookie
 		if tokenString == "" {
-			if cookie, err := r.Cookie("_session"); err == nil {
+			if cookie, err := r.Cookie(auth.Config.SessionName); err == nil {
 				tokenString = cookie.Value
 			}
 		}

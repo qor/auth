@@ -3,6 +3,7 @@ package auth
 import (
 	"errors"
 	"fmt"
+	"net/http"
 	"strings"
 
 	jwt "github.com/dgrijalva/jwt-go"
@@ -15,10 +16,15 @@ type Auth struct {
 }
 
 type Config struct {
+	SessionName   string
 	Prefix        string
 	Render        *render.Render
 	SigningMethod jwt.SigningMethod
 	SignedString  string
+
+	LoginHandler    func(request *http.Request, writer http.ResponseWriter, claims *Claims)
+	LogoutHandler   func(request *http.Request, writer http.ResponseWriter, claims *Claims)
+	RegisterHandler func(request *http.Request, writer http.ResponseWriter, claims *Claims)
 }
 
 // New initialize Auth
@@ -41,6 +47,10 @@ func New(config *Config) *Auth {
 		config.Prefix = fmt.Sprintf("/%v/", strings.Trim(config.Prefix, "/"))
 	}
 
+	if config.SessionName == "" {
+		config.SessionName = "_session"
+	}
+
 	config.Render.RegisterViewPath("github.com/qor/auth/views")
 
 	auth := &Auth{Config: config}
@@ -58,6 +68,7 @@ func (auth *Auth) RegisterProvider(provider Provider) {
 		}
 	}
 
+	provider.ConfigAuth(auth)
 	auth.providers = append(auth.providers, provider)
 }
 

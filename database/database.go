@@ -25,6 +25,9 @@ func (DatabaseProvider) ConfigAuth(*auth.Auth) {
 
 // Login implemented login with database provider
 func (DatabaseProvider) Login(request *http.Request, writer http.ResponseWriter, claims *auth.Claims) {
+	request.ParseForm()
+	request.Form.Get("login")
+	request.Form.Get("password")
 }
 
 // Logout implemented logout with database provider
