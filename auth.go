@@ -22,9 +22,9 @@ type Config struct {
 	SigningMethod jwt.SigningMethod
 	SignedString  string
 
-	LoginHandler    func(request *http.Request, writer http.ResponseWriter, claims *Claims)
-	LogoutHandler   func(request *http.Request, writer http.ResponseWriter, claims *Claims)
-	RegisterHandler func(request *http.Request, writer http.ResponseWriter, claims *Claims)
+	LoginHandler    func(request *http.Request, writer http.ResponseWriter, currentUser interface{}, claims *Claims)
+	LogoutHandler   func(request *http.Request, writer http.ResponseWriter, currentUser interface{}, claims *Claims)
+	RegisterHandler func(request *http.Request, writer http.ResponseWriter, currentUser interface{}, claims *Claims)
 }
 
 // New initialize Auth
