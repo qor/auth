@@ -2,6 +2,7 @@ package auth
 
 import (
 	"net/http"
+	"path"
 	"strings"
 )
 
@@ -12,6 +13,11 @@ func (auth *Auth) NewServeMux() http.Handler {
 
 type serveMux struct {
 	*Auth
+}
+
+// URL generate URL for auth
+func (serveMux *serveMux) AuthURL(pth string) string {
+	return path.Join(serveMux.Auth.Prefix, pth)
 }
 
 // ServeHTTP dispatches the handler registered in the matched route

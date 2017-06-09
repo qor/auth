@@ -5,11 +5,12 @@
     <div>
       {{range $provider := .Result.GetProviders}}
         <div>Login with {{$provider.GetName}}</div>
+        {{render (printf "auth/login/providers/%v" $provider.GetName)}}
       {{end}}
     </div>
   </div>
 
   <div>
-    <a href="">Sign Up</a>
+    <a href="{{.Result.AuthURL "register"}}">Sign Up</a>
   </div>
 </div>
