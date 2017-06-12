@@ -39,12 +39,10 @@ func (provider DatabaseProvider) ConfigAuth(Auth *auth.Auth) {
 			request.ParseForm()
 			tx.Model(Auth.AuthIdentityModel).Where("uid = ?", request.Form.Get("login")).First(authInfo)
 
-			if encryptedPassword, err := Auth.Config.Encryptor.Digest(request.Form.Get("password")); err == nil {
-				if encryptedPassword == authInfo.EncryptedPassword {
-					currentUser := reflect.New(utils.ModelType(Auth.Config.UserModel))
-					err := tx.First(currentUser, authInfo.UserID).Error
-					return currentUser, err
-				}
+			if err := Auth.Config.Encryptor.Compare(authInfo.EncryptedPassword, request.Form.Get("password")); err == nil {
+				currentUser := reflect.New(utils.ModelType(Auth.Config.UserModel))
+				err := tx.First(currentUser, authInfo.UserID).Error
+				return currentUser, err
 			}
 
 			return nil, auth.ErrInvalidPassword
