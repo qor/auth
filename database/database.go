@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/qor/auth"
+	"github.com/qor/auth/auth_identity"
 )
 
 // New initialize database provider
@@ -25,6 +26,19 @@ func (DatabaseProvider) GetName() string {
 // ConfigAuth implemented ConfigAuth for database provider
 func (provider DatabaseProvider) ConfigAuth(auth *auth.Auth) {
 	provider.Auth = auth
+
+	if provider.Authorize == nil {
+		provider.Authorize = func(request *http.Request, writer http.ResponseWriter, claims *auth.Claims) (interface{}, error) {
+			var (
+				authInfo auth_identity.Basic
+				tx       = auth.GetDB(request)
+			)
+
+			request.ParseForm()
+			tx.Model(auth.AuthIdentityModel).Where("uid = ?", request.Form.Get("login")).First(authInfo)
+			// TODO check encrypted password
+		}
+	}
 }
 
 // Login implemented login with database provider

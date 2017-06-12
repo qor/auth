@@ -18,7 +18,7 @@ func (signLogs *SignLogs) Scan(data interface{}) (err error) {
 	switch values := data.(type) {
 	case []byte:
 		if string(values) != "" {
-			return json.Unmarshal(values, b)
+			return json.Unmarshal(values, signLogs)
 		}
 	case string:
 		return signLogs.Scan([]byte(values))

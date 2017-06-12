@@ -7,6 +7,8 @@ import (
 	"strings"
 
 	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/jinzhu/gorm"
+	"github.com/qor/auth/auth_identity"
 	"github.com/qor/render"
 )
 
@@ -16,11 +18,14 @@ type Auth struct {
 }
 
 type Config struct {
-	SessionName   string
-	Prefix        string
-	Render        *render.Render
-	SigningMethod jwt.SigningMethod
-	SignedString  string
+	DB                *gorm.DB
+	SessionName       string
+	Prefix            string
+	Render            *render.Render
+	SigningMethod     jwt.SigningMethod
+	SignedString      string
+	UserModel         interface{}
+	AuthIdentityModel interface{}
 
 	LoginHandler    func(request *http.Request, writer http.ResponseWriter, currentUser interface{}, claims *Claims)
 	LogoutHandler   func(request *http.Request, writer http.ResponseWriter, currentUser interface{}, claims *Claims)
@@ -51,11 +56,25 @@ func New(config *Config) *Auth {
 		config.SessionName = "_session"
 	}
 
+	if config.AuthIdentityModel == nil {
+		config.AuthIdentityModel = &auth_identity.AuthIdentity{}
+	}
+
 	config.Render.RegisterViewPath("github.com/qor/auth/views")
 
 	auth := &Auth{Config: config}
 
 	return auth
+}
+
+// GetDB get db
+func (auth *Auth) GetDB(request *http.Request) *gorm.DB {
+	if db, ok := request.Context().Value("DB"); ok {
+		if tx, ok := db.(*gorm.DB); ok {
+			return tx
+		}
+	}
+	return auth.Config.DB
 }
 
 // RegisterProvider register auth provider
