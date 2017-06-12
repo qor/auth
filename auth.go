@@ -26,6 +26,7 @@ type Config struct {
 	SignedString      string
 	UserModel         interface{}
 	AuthIdentityModel interface{}
+	Encryptor         EncryptorInterface
 
 	LoginHandler    func(request *http.Request, writer http.ResponseWriter, currentUser interface{}, claims *Claims)
 	LogoutHandler   func(request *http.Request, writer http.ResponseWriter, currentUser interface{}, claims *Claims)
@@ -69,10 +70,9 @@ func New(config *Config) *Auth {
 
 // GetDB get db
 func (auth *Auth) GetDB(request *http.Request) *gorm.DB {
-	if db, ok := request.Context().Value("DB"); ok {
-		if tx, ok := db.(*gorm.DB); ok {
-			return tx
-		}
+	db := request.Context().Value("DB")
+	if tx, ok := db.(*gorm.DB); ok {
+		return tx
 	}
 	return auth.Config.DB
 }

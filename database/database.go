@@ -2,9 +2,11 @@ package database
 
 import (
 	"net/http"
+	"reflect"
 
 	"github.com/qor/auth"
 	"github.com/qor/auth/auth_identity"
+	"github.com/qor/qor/utils"
 )
 
 // New initialize database provider
@@ -24,19 +26,28 @@ func (DatabaseProvider) GetName() string {
 }
 
 // ConfigAuth implemented ConfigAuth for database provider
-func (provider DatabaseProvider) ConfigAuth(auth *auth.Auth) {
-	provider.Auth = auth
+func (provider DatabaseProvider) ConfigAuth(Auth *auth.Auth) {
+	provider.Auth = Auth
 
 	if provider.Authorize == nil {
 		provider.Authorize = func(request *http.Request, writer http.ResponseWriter, claims *auth.Claims) (interface{}, error) {
 			var (
 				authInfo auth_identity.Basic
-				tx       = auth.GetDB(request)
+				tx       = Auth.GetDB(request)
 			)
 
 			request.ParseForm()
-			tx.Model(auth.AuthIdentityModel).Where("uid = ?", request.Form.Get("login")).First(authInfo)
-			// TODO check encrypted password
+			tx.Model(Auth.AuthIdentityModel).Where("uid = ?", request.Form.Get("login")).First(authInfo)
+
+			if encryptedPassword, err := Auth.Config.Encryptor.Digest(request.Form.Get("password")); err == nil {
+				if encryptedPassword == authInfo.EncryptedPassword {
+					currentUser := reflect.New(utils.ModelType(Auth.Config.UserModel))
+					err := tx.First(currentUser, authInfo.UserID).Error
+					return currentUser, err
+				}
+			}
+
+			return nil, auth.ErrInvalidPassword
 		}
 	}
 }
