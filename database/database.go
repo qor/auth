@@ -36,19 +36,19 @@ func (provider DatabaseProvider) Login(request *http.Request, writer http.Respon
 }
 
 // Logout implemented logout with database provider
-func (DatabaseProvider) Logout(request *http.Request, writer http.ResponseWriter, claims *auth.Claims) {
+func (provider DatabaseProvider) Logout(request *http.Request, writer http.ResponseWriter, claims *auth.Claims) {
 	provider.Auth.LogoutHandler(request, writer, nil, claims)
 }
 
 // Register implemented register with database provider
-func (DatabaseProvider) Register(request *http.Request, writer http.ResponseWriter, claims *auth.Claims) {
+func (provider DatabaseProvider) Register(request *http.Request, writer http.ResponseWriter, claims *auth.Claims) {
 	provider.Auth.RegisterHandler(request, writer, nil, claims)
 }
 
 // Callback implement Callback with database provider
-func (DatabaseProvider) Callback(*http.Request, http.ResponseWriter, *auth.Claims) {
+func (provider DatabaseProvider) Callback(*http.Request, http.ResponseWriter, *auth.Claims) {
 }
 
 // ServeHTTP implement ServeHTTP with database provider
-func (DatabaseProvider) ServeHTTP(*http.Request, http.ResponseWriter, *auth.Claims) {
+func (provider DatabaseProvider) ServeHTTP(*http.Request, http.ResponseWriter, *auth.Claims) {
 }
