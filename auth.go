@@ -30,8 +30,8 @@ type Config struct {
 	Encryptor         EncryptorInterface
 
 	LoginHandler    func(*http.Request, http.ResponseWriter, *Session, func(*http.Request, http.ResponseWriter, *Session) (interface{}, error))
+	RegisterHandler func(*http.Request, http.ResponseWriter, *Session, func(*http.Request, http.ResponseWriter, *Session) (interface{}, error))
 	LogoutHandler   func(request *http.Request, writer http.ResponseWriter, session *Session)
-	RegisterHandler func(request *http.Request, writer http.ResponseWriter, session *Session)
 }
 
 // New initialize Auth
