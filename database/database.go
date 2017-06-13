@@ -17,7 +17,7 @@ func New() *DatabaseProvider {
 // DatabaseProvider provide login with database method
 type DatabaseProvider struct {
 	Auth      *auth.Auth
-	Authorize func(request *http.Request, writer http.ResponseWriter, claims *auth.Claims) (interface{}, error)
+	Authorize func(request *http.Request, writer http.ResponseWriter) (interface{}, error)
 }
 
 // GetName return provider name
@@ -26,18 +26,20 @@ func (DatabaseProvider) GetName() string {
 }
 
 // ConfigAuth implemented ConfigAuth for database provider
-func (provider DatabaseProvider) ConfigAuth(Auth *auth.Auth) {
+func (provider *DatabaseProvider) ConfigAuth(Auth *auth.Auth) {
 	provider.Auth = Auth
 
 	if provider.Authorize == nil {
-		provider.Authorize = func(request *http.Request, writer http.ResponseWriter, claims *auth.Claims) (interface{}, error) {
+		provider.Authorize = func(request *http.Request, writer http.ResponseWriter) (interface{}, error) {
 			var (
 				authInfo auth_identity.Basic
 				tx       = Auth.GetDB(request)
 			)
 
 			request.ParseForm()
-			tx.Model(Auth.AuthIdentityModel).Where("uid = ?", request.Form.Get("login")).First(authInfo)
+			if tx.Model(Auth.AuthIdentityModel).Where("uid = ?", request.Form.Get("login")).Scan(authInfo).RecordNotFound() {
+				return nil, auth.ErrInvalidAccount
+			}
 
 			if err := Auth.Config.Encryptor.Compare(authInfo.EncryptedPassword, request.Form.Get("password")); err == nil {
 				currentUser := reflect.New(utils.ModelType(Auth.Config.UserModel))
@@ -52,10 +54,7 @@ func (provider DatabaseProvider) ConfigAuth(Auth *auth.Auth) {
 
 // Login implemented login with database provider
 func (provider DatabaseProvider) Login(request *http.Request, writer http.ResponseWriter, claims *auth.Claims) {
-	currentUser, err := provider.Authorize(request, writer, claims)
-	if err == nil && currentUser != nil {
-		provider.Auth.LoginHandler(request, writer, currentUser, claims)
-	}
+	provider.Auth.LoginHandler(request, writer, provider.Authorize)
 }
 
 // Logout implemented logout with database provider

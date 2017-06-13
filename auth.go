@@ -9,6 +9,7 @@ import (
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/jinzhu/gorm"
 	"github.com/qor/auth/auth_identity"
+	"github.com/qor/auth/encryptors/bcrypt_encryptor"
 	"github.com/qor/render"
 )
 
@@ -28,7 +29,7 @@ type Config struct {
 	AuthIdentityModel interface{}
 	Encryptor         EncryptorInterface
 
-	LoginHandler    func(request *http.Request, writer http.ResponseWriter, currentUser interface{}, claims *Claims)
+	LoginHandler    func(*http.Request, http.ResponseWriter, func(*http.Request, http.ResponseWriter) (currentUser interface{}, err error))
 	LogoutHandler   func(request *http.Request, writer http.ResponseWriter, currentUser interface{}, claims *Claims)
 	RegisterHandler func(request *http.Request, writer http.ResponseWriter, currentUser interface{}, claims *Claims)
 }
@@ -59,6 +60,14 @@ func New(config *Config) *Auth {
 
 	if config.AuthIdentityModel == nil {
 		config.AuthIdentityModel = &auth_identity.AuthIdentity{}
+	}
+
+	if config.Encryptor == nil {
+		config.Encryptor = bcrypt_encryptor.New(&bcrypt_encryptor.Config{})
+	}
+
+	if config.LoginHandler == nil {
+		config.LoginHandler = DefaultLoginHandler
 	}
 
 	config.Render.RegisterViewPath("github.com/qor/auth/views")

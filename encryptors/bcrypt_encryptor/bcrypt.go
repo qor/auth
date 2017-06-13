@@ -29,7 +29,7 @@ func New(config *Config) *BcryptEncryptor {
 
 // Digest generate encrypted password
 func (bcryptEncryptor *BcryptEncryptor) Digest(password string) (string, error) {
-	hashedPassword, err := bcrypt.GenerateFromPassword(password, bcrypt.DefaultCost)
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	return string(hashedPassword), err
 }
 

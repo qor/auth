@@ -1,8 +1,13 @@
 package auth
 
-import "net/http"
+import (
+	"fmt"
+	"net/http"
+)
 
 // DefaultLoginHandler default behaviour after logged in
-var DefaultLoginHandler = func(request *http.Request, writer http.ResponseWriter, claims *Claims) {
-	request.Cookie("_session")
+var DefaultLoginHandler = func(req *http.Request, w http.ResponseWriter, authorize func(*http.Request, http.ResponseWriter) (interface{}, error)) {
+	currentUser, err := authorize(req, w)
+	fmt.Println(currentUser)
+	fmt.Println(err)
 }
