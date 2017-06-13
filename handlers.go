@@ -1,9 +1,6 @@
 package auth
 
-import (
-	"fmt"
-	"net/http"
-)
+import "net/http"
 
 // DefaultLoginHandler default login behaviour
 var DefaultLoginHandler = func(req *http.Request, w http.ResponseWriter, session *Session, authorize func(*http.Request, http.ResponseWriter, *Session) (interface{}, error)) {
@@ -11,7 +8,7 @@ var DefaultLoginHandler = func(req *http.Request, w http.ResponseWriter, session
 	if err == nil {
 		if currentUser != nil {
 			// write cookie, json
-		} else {
+			http.Redirect(w, req, "/", http.StatusSeeOther)
 		}
 	}
 
@@ -21,11 +18,10 @@ var DefaultLoginHandler = func(req *http.Request, w http.ResponseWriter, session
 // DefaultRegisterHandler default register behaviour
 var DefaultRegisterHandler = func(req *http.Request, w http.ResponseWriter, session *Session, register func(*http.Request, http.ResponseWriter, *Session) (interface{}, error)) {
 	user, err := register(req, w, session)
-	fmt.Println(user)
-	fmt.Println(err)
 	if err == nil {
 		if user != nil {
 			// registered
+			http.Redirect(w, req, "/", http.StatusSeeOther)
 		}
 	}
 

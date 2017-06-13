@@ -41,7 +41,7 @@ func (provider *DatabaseProvider) ConfigAuth(Auth *auth.Auth) {
 			request.ParseForm()
 			authInfo.Provider = provider.GetName()
 			authInfo.UID = request.Form.Get("login")
-			if tx.Model(Auth.AuthIdentityModel).Where(authInfo).Scan(authInfo).RecordNotFound() {
+			if tx.Model(Auth.AuthIdentityModel).Where(authInfo).Scan(&authInfo).RecordNotFound() {
 				return nil, auth.ErrInvalidAccount
 			}
 
@@ -77,6 +77,11 @@ func (provider *DatabaseProvider) ConfigAuth(Auth *auth.Auth) {
 
 			authInfo.Provider = provider.GetName()
 			authInfo.UID = request.Form.Get("login")
+
+			if !tx.Model(Auth.AuthIdentityModel).Where(authInfo).Scan(&authInfo).RecordNotFound() {
+				return nil, auth.ErrInvalidAccount
+			}
+
 			if authInfo.EncryptedPassword, err = session.Auth.Config.Encryptor.Digest(request.Form.Get("password")); err == nil {
 				if Auth.Config.UserModel != nil {
 					user := reflect.New(utils.ModelType(Auth.Config.UserModel)).Interface()
