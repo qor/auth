@@ -9,6 +9,7 @@ import (
 
 // SignLogs record sign in logs
 type SignLogs struct {
+	Log         string `sql:"-"`
 	SignInCount uint
 	Logs        []SignLog
 }

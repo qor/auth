@@ -39,14 +39,19 @@ func (provider *DatabaseProvider) ConfigAuth(Auth *auth.Auth) {
 			)
 
 			request.ParseForm()
-			if tx.Model(Auth.AuthIdentityModel).Where("uid = ?", request.Form.Get("login")).Scan(authInfo).RecordNotFound() {
+			authInfo.Provider = provider.GetName()
+			authInfo.UID = request.Form.Get("login")
+			if tx.Model(Auth.AuthIdentityModel).Where(authInfo).Scan(authInfo).RecordNotFound() {
 				return nil, auth.ErrInvalidAccount
 			}
 
 			if err := Auth.Config.Encryptor.Compare(authInfo.EncryptedPassword, request.Form.Get("password")); err == nil {
-				currentUser := reflect.New(utils.ModelType(Auth.Config.UserModel))
-				err := tx.First(currentUser, authInfo.UserID).Error
-				return currentUser, err
+				if Auth.Config.UserModel != nil {
+					currentUser := reflect.New(utils.ModelType(Auth.Config.UserModel)).Interface()
+					err := tx.First(currentUser, authInfo.UserID).Error
+					return currentUser, err
+				}
+				return authInfo, err
 			}
 
 			return nil, auth.ErrInvalidPassword
@@ -70,17 +75,21 @@ func (provider *DatabaseProvider) ConfigAuth(Auth *auth.Auth) {
 				return nil, auth.ErrInvalidPassword
 			}
 
+			authInfo.Provider = provider.GetName()
 			authInfo.UID = request.Form.Get("login")
-			if authInfo.EncryptedPassword, err = session.Auth.Config.Encryptor.Digest(request.Form.Get("password")); err != nil {
-				return nil, err
+			if authInfo.EncryptedPassword, err = session.Auth.Config.Encryptor.Digest(request.Form.Get("password")); err == nil {
+				if Auth.Config.UserModel != nil {
+					user := reflect.New(utils.ModelType(Auth.Config.UserModel)).Interface()
+					if err = tx.Where(authInfo).FirstOrCreate(user).Error; err == nil {
+						authInfo.UserID = fmt.Sprint(tx.NewScope(user).PrimaryKeyValue())
+					}
+				}
+
+				authIdentity := reflect.New(utils.ModelType(Auth.Config.AuthIdentityModel)).Interface()
+				err = tx.Where(authInfo).FirstOrCreate(authIdentity).Error
 			}
 
-			fmt.Println(authInfo)
-			if tx.Model(Auth.AuthIdentityModel).Where("uid = ?", request.Form.Get("login")).Scan(authInfo).RecordNotFound() {
-				return nil, auth.ErrInvalidAccount
-			}
-
-			return nil, nil
+			return nil, err
 		}
 	}
 }
