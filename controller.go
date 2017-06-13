@@ -15,17 +15,13 @@ type serveMux struct {
 	*Auth
 }
 
-// URL generate URL for auth
-func (serveMux *serveMux) AuthURL(pth string) string {
-	return path.Join(serveMux.Auth.Prefix, pth)
-}
-
 // ServeHTTP dispatches the handler registered in the matched route
 func (serveMux *serveMux) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	var (
+		claims  *Claims
 		reqPath = strings.TrimPrefix(req.URL.Path, serveMux.Prefix)
 		paths   = strings.Split(reqPath, "/")
-		claims  *Claims
+		session = &Session{Auth: serveMux.Auth, Claims: claims}
 	)
 
 	if len(paths) >= 2 {
@@ -35,15 +31,15 @@ func (serveMux *serveMux) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 			// serve mux
 			switch paths[1] {
 			case "login":
-				provider.Login(req, w, claims)
+				provider.Login(req, w, session)
 			case "logout":
-				provider.Logout(req, w, claims)
+				provider.Logout(req, w, session)
 			case "register":
-				provider.Register(req, w, claims)
+				provider.Register(req, w, session)
 			case "callback":
-				provider.Callback(req, w, claims)
+				provider.Callback(req, w, session)
 			default:
-				provider.ServeHTTP(req, w, claims)
+				provider.ServeHTTP(req, w, session)
 			}
 			return
 		}
@@ -53,17 +49,29 @@ func (serveMux *serveMux) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		switch paths[0] {
 		case "login":
 			// render login page
-			serveMux.Auth.Render.Execute("auth/login", serveMux, req, w)
+			serveMux.Auth.Render.Execute("auth/login", session, req, w)
 			return
 		case "logout":
 			// destroy login session
 			return
 		case "register":
 			// render register page
-			serveMux.Auth.Render.Execute("auth/register", serveMux, req, w)
+			serveMux.Auth.Render.Execute("auth/register", session, req, w)
 			return
 		}
 	}
 
 	http.NotFound(w, req)
+}
+
+// Session session
+type Session struct {
+	*Auth
+	*Claims
+	Params map[string]interface{}
+}
+
+// AuthURL generate URL for auth
+func (session *Session) AuthURL(pth string) string {
+	return path.Join(session.Auth.Prefix, pth)
 }

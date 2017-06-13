@@ -17,7 +17,7 @@ func New() *DatabaseProvider {
 // DatabaseProvider provide login with database method
 type DatabaseProvider struct {
 	Auth      *auth.Auth
-	Authorize func(request *http.Request, writer http.ResponseWriter) (interface{}, error)
+	Authorize func(request *http.Request, writer http.ResponseWriter, session *auth.Session) (interface{}, error)
 }
 
 // GetName return provider name
@@ -30,7 +30,7 @@ func (provider *DatabaseProvider) ConfigAuth(Auth *auth.Auth) {
 	provider.Auth = Auth
 
 	if provider.Authorize == nil {
-		provider.Authorize = func(request *http.Request, writer http.ResponseWriter) (interface{}, error) {
+		provider.Authorize = func(request *http.Request, writer http.ResponseWriter, session *auth.Session) (interface{}, error) {
 			var (
 				authInfo auth_identity.Basic
 				tx       = Auth.GetDB(request)
@@ -53,24 +53,24 @@ func (provider *DatabaseProvider) ConfigAuth(Auth *auth.Auth) {
 }
 
 // Login implemented login with database provider
-func (provider DatabaseProvider) Login(request *http.Request, writer http.ResponseWriter, claims *auth.Claims) {
-	provider.Auth.LoginHandler(request, writer, provider.Authorize)
+func (provider DatabaseProvider) Login(request *http.Request, writer http.ResponseWriter, session *auth.Session) {
+	provider.Auth.LoginHandler(request, writer, session, provider.Authorize)
 }
 
 // Logout implemented logout with database provider
-func (provider DatabaseProvider) Logout(request *http.Request, writer http.ResponseWriter, claims *auth.Claims) {
-	provider.Auth.LogoutHandler(request, writer, nil, claims)
+func (provider DatabaseProvider) Logout(request *http.Request, writer http.ResponseWriter, session *auth.Session) {
+	provider.Auth.LogoutHandler(request, writer, nil, session)
 }
 
 // Register implemented register with database provider
-func (provider DatabaseProvider) Register(request *http.Request, writer http.ResponseWriter, claims *auth.Claims) {
-	provider.Auth.RegisterHandler(request, writer, nil, claims)
+func (provider DatabaseProvider) Register(request *http.Request, writer http.ResponseWriter, session *auth.Session) {
+	provider.Auth.RegisterHandler(request, writer, nil, session)
 }
 
 // Callback implement Callback with database provider
-func (provider DatabaseProvider) Callback(*http.Request, http.ResponseWriter, *auth.Claims) {
+func (provider DatabaseProvider) Callback(req *http.Request, writer http.ResponseWriter, session *auth.Session) {
 }
 
 // ServeHTTP implement ServeHTTP with database provider
-func (provider DatabaseProvider) ServeHTTP(*http.Request, http.ResponseWriter, *auth.Claims) {
+func (provider DatabaseProvider) ServeHTTP(req *http.Request, writer http.ResponseWriter, session *auth.Session) {
 }

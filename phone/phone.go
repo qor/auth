@@ -24,21 +24,21 @@ func (PhoneProvider) ConfigAuth(*auth.Auth) {
 }
 
 // Login implemented login with phone provider
-func (PhoneProvider) Login(request *http.Request, writer http.ResponseWriter, claims *auth.Claims) {
+func (PhoneProvider) Login(request *http.Request, writer http.ResponseWriter, session *auth.Session) {
 }
 
 // Logout implemented logout with phone provider
-func (PhoneProvider) Logout(request *http.Request, writer http.ResponseWriter, claims *auth.Claims) {
+func (PhoneProvider) Logout(request *http.Request, writer http.ResponseWriter, session *auth.Session) {
 }
 
 // Register implemented register with phone provider
-func (PhoneProvider) Register(request *http.Request, writer http.ResponseWriter, claims *auth.Claims) {
+func (PhoneProvider) Register(request *http.Request, writer http.ResponseWriter, session *auth.Session) {
 }
 
 // Callback implement Callback with phone provider
-func (PhoneProvider) Callback(*http.Request, http.ResponseWriter, *auth.Claims) {
+func (PhoneProvider) Callback(*http.Request, http.ResponseWriter, *auth.Session) {
 }
 
 // ServeHTTP implement ServeHTTP with phone provider
-func (PhoneProvider) ServeHTTP(*http.Request, http.ResponseWriter, *auth.Claims) {
+func (PhoneProvider) ServeHTTP(*http.Request, http.ResponseWriter, *auth.Session) {
 }

@@ -29,9 +29,9 @@ type Config struct {
 	AuthIdentityModel interface{}
 	Encryptor         EncryptorInterface
 
-	LoginHandler    func(*http.Request, http.ResponseWriter, func(*http.Request, http.ResponseWriter) (currentUser interface{}, err error))
-	LogoutHandler   func(request *http.Request, writer http.ResponseWriter, currentUser interface{}, claims *Claims)
-	RegisterHandler func(request *http.Request, writer http.ResponseWriter, currentUser interface{}, claims *Claims)
+	LoginHandler    func(*http.Request, http.ResponseWriter, *Session, func(*http.Request, http.ResponseWriter, *Session) (interface{}, error))
+	LogoutHandler   func(request *http.Request, writer http.ResponseWriter, currentUser interface{}, session *Session)
+	RegisterHandler func(request *http.Request, writer http.ResponseWriter, currentUser interface{}, session *Session)
 }
 
 // New initialize Auth

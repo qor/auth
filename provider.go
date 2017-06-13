@@ -7,9 +7,9 @@ type Provider interface {
 	GetName() string
 	ConfigAuth(*Auth)
 
-	Login(*http.Request, http.ResponseWriter, *Claims)
-	Logout(*http.Request, http.ResponseWriter, *Claims)
-	Register(*http.Request, http.ResponseWriter, *Claims)
-	Callback(*http.Request, http.ResponseWriter, *Claims)
-	ServeHTTP(*http.Request, http.ResponseWriter, *Claims)
+	Login(*http.Request, http.ResponseWriter, *Session)
+	Logout(*http.Request, http.ResponseWriter, *Session)
+	Register(*http.Request, http.ResponseWriter, *Session)
+	Callback(*http.Request, http.ResponseWriter, *Session)
+	ServeHTTP(*http.Request, http.ResponseWriter, *Session)
 }
