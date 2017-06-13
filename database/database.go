@@ -59,12 +59,12 @@ func (provider DatabaseProvider) Login(request *http.Request, writer http.Respon
 
 // Logout implemented logout with database provider
 func (provider DatabaseProvider) Logout(request *http.Request, writer http.ResponseWriter, session *auth.Session) {
-	provider.Auth.LogoutHandler(request, writer, nil, session)
+	provider.Auth.LogoutHandler(request, writer, session)
 }
 
 // Register implemented register with database provider
 func (provider DatabaseProvider) Register(request *http.Request, writer http.ResponseWriter, session *auth.Session) {
-	provider.Auth.RegisterHandler(request, writer, nil, session)
+	provider.Auth.RegisterHandler(request, writer, session)
 }
 
 // Callback implement Callback with database provider

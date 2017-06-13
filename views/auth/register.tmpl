@@ -2,7 +2,12 @@
   <h2>Register</h2>
 
   <div>
-    render all providers's register form
+    <div>
+      {{range $provider := .Result.GetProviders}}
+        <div>Register with {{$provider.GetName}}</div>
+        {{render (printf "auth/register/providers/%v" $provider.GetName)}}
+      {{end}}
+    </div>
   </div>
 
   <div>

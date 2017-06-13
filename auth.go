@@ -30,8 +30,8 @@ type Config struct {
 	Encryptor         EncryptorInterface
 
 	LoginHandler    func(*http.Request, http.ResponseWriter, *Session, func(*http.Request, http.ResponseWriter, *Session) (interface{}, error))
-	LogoutHandler   func(request *http.Request, writer http.ResponseWriter, currentUser interface{}, session *Session)
-	RegisterHandler func(request *http.Request, writer http.ResponseWriter, currentUser interface{}, session *Session)
+	LogoutHandler   func(request *http.Request, writer http.ResponseWriter, session *Session)
+	RegisterHandler func(request *http.Request, writer http.ResponseWriter, session *Session)
 }
 
 // New initialize Auth
@@ -68,6 +68,10 @@ func New(config *Config) *Auth {
 
 	if config.LoginHandler == nil {
 		config.LoginHandler = DefaultLoginHandler
+	}
+
+	if config.RegisterHandler == nil {
+		config.RegisterHandler = DefaultRegisterHandler
 	}
 
 	config.Render.RegisterViewPath("github.com/qor/auth/views")
