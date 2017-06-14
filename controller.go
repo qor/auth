@@ -28,6 +28,8 @@ func (serveMux *serveMux) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		// eg: /phone/login
 
 		if provider := serveMux.Auth.GetProvider(paths[0]); provider != nil {
+			session.Provider = provider
+
 			// serve mux
 			switch paths[1] {
 			case "login":
@@ -68,6 +70,7 @@ func (serveMux *serveMux) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 type Session struct {
 	*Auth
 	*Claims
+	Provider
 	Params map[string]interface{}
 }
 

@@ -1,18 +1,38 @@
 package auth
 
-import "net/http"
+import (
+	"fmt"
+	"net/http"
+
+	"github.com/qor/responder"
+)
 
 // DefaultLoginHandler default login behaviour
 var DefaultLoginHandler = func(req *http.Request, w http.ResponseWriter, session *Session, authorize func(*http.Request, http.ResponseWriter, *Session) (interface{}, error)) {
+	tx := session.Auth.GetDB(req)
 	currentUser, err := authorize(req, w, session)
 	if err == nil {
 		if currentUser != nil {
-			// write cookie, json
-			http.Redirect(w, req, "/", http.StatusSeeOther)
+			claims := &Claims{}
+			claims.Id = fmt.Sprint(tx.NewScope(currentUser).PrimaryKeyValue())
+			token := session.Auth.SignedToken(claims)
+
+			responder.With("html", func() {
+				// write cookie
+				fmt.Println(token)
+				http.Redirect(w, req, "/", http.StatusSeeOther)
+			}).With([]string{"json"}, func() {
+				// write json token
+				fmt.Println(token)
+			}).Respond(req)
 		}
 	}
 
-	session.Auth.Config.Render.Execute("auth/login", session, req, w)
+	responder.With("html", func() {
+		session.Auth.Config.Render.Execute("auth/login", session, req, w)
+	}).With([]string{"json"}, func() {
+		// write json error
+	})
 }
 
 // DefaultRegisterHandler default register behaviour
@@ -25,5 +45,9 @@ var DefaultRegisterHandler = func(req *http.Request, w http.ResponseWriter, sess
 		}
 	}
 
-	session.Auth.Config.Render.Execute("auth/register", session, req, w)
+	responder.With("html", func() {
+		session.Auth.Config.Render.Execute("auth/register", session, req, w)
+	}).With([]string{"json"}, func() {
+		// write json error
+	})
 }
