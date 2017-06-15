@@ -47,6 +47,9 @@ func (provider *DatabaseProvider) ConfigAuth(Auth *auth.Auth) {
 
 			if err := Auth.Config.Encryptor.Compare(authInfo.EncryptedPassword, request.Form.Get("password")); err == nil {
 				if Auth.Config.UserModel != nil {
+					if authInfo.UserID == "" {
+						return nil, auth.ErrInvalidAccount
+					}
 					currentUser := reflect.New(utils.ModelType(Auth.Config.UserModel)).Interface()
 					err := tx.First(currentUser, authInfo.UserID).Error
 					return currentUser, err
