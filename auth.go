@@ -31,7 +31,7 @@ type Config struct {
 
 	LoginHandler    func(*http.Request, http.ResponseWriter, *Session, func(*http.Request, http.ResponseWriter, *Session) (interface{}, error))
 	RegisterHandler func(*http.Request, http.ResponseWriter, *Session, func(*http.Request, http.ResponseWriter, *Session) (interface{}, error))
-	LogoutHandler   func(request *http.Request, writer http.ResponseWriter, session *Session)
+	LogoutHandler   func(*http.Request, http.ResponseWriter, *Session)
 }
 
 // New initialize Auth

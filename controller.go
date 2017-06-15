@@ -75,6 +75,6 @@ type Session struct {
 }
 
 // AuthURL generate URL for auth
-func (session *Session) AuthURL(pth string) string {
-	return path.Join(session.Auth.Prefix, pth)
+func (auth *Auth) AuthURL(pth string) string {
+	return path.Join(auth.Prefix, pth)
 }

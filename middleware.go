@@ -3,40 +3,61 @@ package auth
 import (
 	"context"
 	"net/http"
+	"reflect"
 
+	"github.com/qor/qor/utils"
 	"github.com/qor/roles"
 )
 
 const CurrentUser string = "CurrentUser"
 
+// GetCurrentUser get current user from request
+func (auth *Auth) GetCurrentUser(w http.ResponseWriter, r *http.Request) interface{} {
+	var (
+		currentUser interface{}
+		tokenString = r.Header.Get("Authorization")
+	)
+
+	// Get Token from Cookie
+	if tokenString == "" {
+		if cookie, err := r.Cookie(auth.Config.SessionName); err == nil {
+			tokenString = cookie.Value
+		}
+	}
+
+	claims, err := auth.Validate(tokenString)
+	if err == nil {
+		tx := auth.GetDB(r)
+
+		if auth.UserModel != nil {
+			user := reflect.New(utils.ModelType(auth.Config.UserModel)).Interface()
+			if err := tx.First(user, claims.Id).Error; err == nil {
+				currentUser = user
+			}
+		} else if auth.Config.AuthIdentityModel != nil {
+			user := reflect.New(utils.ModelType(auth.Config.AuthIdentityModel)).Interface()
+			if err := tx.First(user, claims.Id).Error; err == nil {
+				currentUser = user
+			}
+		}
+	}
+
+	return currentUser
+}
+
+// Restrict restrict middleware
 func (auth *Auth) Restrict(h http.Handler, permission *roles.Permission) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Get Token from Header
 		var (
-			currentUser   interface{}
 			hasPermission bool
 			matchedRoles  []string
-			tokenString   = r.Header.Get("Authorization")
+			currentUser   = auth.GetCurrentUser(w, r)
 		)
 
-		// Get Token from Cookie
-		if tokenString == "" {
-			if cookie, err := r.Cookie(auth.Config.SessionName); err == nil {
-				tokenString = cookie.Value
-			}
-		}
-
-		claims, err := auth.Validate(tokenString)
-
-		if err == nil {
-			if provider := auth.GetProvider(claims.Type); provider != nil {
-				currentUser = nil // provider.GetCurrentUser(r, w, claims)
-
-				// get current user
-				if currentUser != nil {
-					r.WithContext(context.WithValue(r.Context(), CurrentUser, currentUser))
-				}
-			}
+		// get current user
+		if currentUser != nil {
+			r.WithContext(context.WithValue(r.Context(), CurrentUser, currentUser))
 		}
 
 		// get current user roles
@@ -56,7 +77,7 @@ func (auth *Auth) Restrict(h http.Handler, permission *roles.Permission) http.Ha
 		if hasPermission {
 			h.ServeHTTP(w, r)
 		} else {
-			// redirect to login page
+			http.Redirect(w, r, auth.AuthURL("login"), http.StatusSeeOther)
 		}
 	})
 }
