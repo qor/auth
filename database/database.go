@@ -85,8 +85,10 @@ func (provider *DatabaseProvider) ConfigAuth(Auth *auth.Auth) {
 			if authInfo.EncryptedPassword, err = session.Auth.Config.Encryptor.Digest(request.Form.Get("password")); err == nil {
 				if Auth.Config.UserModel != nil {
 					user := reflect.New(utils.ModelType(Auth.Config.UserModel)).Interface()
-					if err = tx.Where(authInfo).FirstOrCreate(user).Error; err == nil {
+					if err = tx.Create(user).Error; err == nil {
 						authInfo.UserID = fmt.Sprint(tx.NewScope(user).PrimaryKeyValue())
+					} else {
+						return nil, err
 					}
 				}
 
