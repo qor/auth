@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/qor/qor"
+	"github.com/qor/qor/utils"
 	"github.com/qor/responder"
 )
 
@@ -16,6 +18,15 @@ var DefaultLoginHandler = func(req *http.Request, w http.ResponseWriter, session
 			claims := &Claims{}
 			claims.Id = fmt.Sprint(tx.NewScope(currentUser).PrimaryKeyValue())
 			token := session.Auth.SignedToken(claims)
+			context := &qor.Context{
+				Request: req,
+				Writer:  w,
+			}
+
+			utils.SetCookie(http.Cookie{
+				Name:  session.Auth.Config.SessionName,
+				Value: token,
+			}, context)
 
 			responder.With("html", func() {
 				// write cookie
