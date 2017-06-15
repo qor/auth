@@ -74,6 +74,10 @@ func New(config *Config) *Auth {
 		config.RegisterHandler = DefaultRegisterHandler
 	}
 
+	if config.LogoutHandler == nil {
+		config.LogoutHandler = DefaultLogoutHandler
+	}
+
 	config.Render.RegisterViewPath("github.com/qor/auth/views")
 
 	auth := &Auth{Config: config}

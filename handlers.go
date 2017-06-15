@@ -62,3 +62,15 @@ var DefaultRegisterHandler = func(req *http.Request, w http.ResponseWriter, sess
 		// write json error
 	})
 }
+
+// DefaultLogoutHandler default logout behaviour
+var DefaultLogoutHandler = func(req *http.Request, w http.ResponseWriter, session *Session) {
+	context := &qor.Context{
+		Request: req,
+		Writer:  w,
+	}
+
+	utils.SetCookie(http.Cookie{Name: session.Auth.Config.SessionName, Value: ""}, context)
+
+	http.Redirect(w, req, "/", http.StatusSeeOther)
+}
