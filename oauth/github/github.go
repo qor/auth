@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/google/go-github/github"
 	"github.com/qor/auth"
 	"github.com/qor/auth/auth_identity"
 	"golang.org/x/oauth2"
@@ -75,10 +76,21 @@ func New(config *Config) *GithubProvider {
 			}
 
 			if err == nil {
-				code := req.URL.Query().Get("code")
-				fmt.Println(code)
+				oauthCfg := provider.OAuthConfig(req, session)
+				tkn, err := oauthCfg.Exchange(oauth2.NoContext, req.URL.Query().Get("code"))
+
+				if err != nil {
+					return nil, err
+				}
+
+				client := github.NewClient(oauthCfg.Client(oauth2.NoContext, tkn))
+				user, _, err := client.Users.Get("")
+				if err != nil {
+					return nil, err
+				}
+
 				authInfo.Provider = provider.GetName()
-				authInfo.UID = ""
+				authInfo.UID = fmt.Sprint(*user.ID)
 				return nil, nil
 			}
 
