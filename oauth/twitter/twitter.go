@@ -1,17 +1,54 @@
 package twitter
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/qor/auth"
 )
 
-func New() *TwitterProvider {
-	return &TwitterProvider{}
+var (
+	AuthorizeURL = "https://github.com/login/oauth/authorize"
+	TokenURL     = "https://github.com/login/oauth/access_token"
+)
+
+// Config twitter Config
+type Config struct {
+	ClientID     string
+	ClientSecret string
+	AuthorizeURL string
+	TokenURL     string
+	RedirectURL  string
+	Scopes       []string
+}
+
+func New(config *Config) *TwitterProvider {
+	if config == nil {
+		config = &Config{}
+	}
+
+	if config.ClientID == "" {
+		panic(errors.New("Twitter's ClientID can't be blank"))
+	}
+
+	if config.ClientSecret == "" {
+		panic(errors.New("Twitter's ClientSecret can't be blank"))
+	}
+
+	if config.AuthorizeURL == "" {
+		config.AuthorizeURL = AuthorizeURL
+	}
+
+	if config.TokenURL == "" {
+		config.TokenURL = TokenURL
+	}
+
+	return &TwitterProvider{Config: config}
 }
 
 // twitterProvider provide login with twitter method
 type TwitterProvider struct {
+	*Config
 }
 
 // GetName return provider name
