@@ -4,13 +4,21 @@ import (
 	"errors"
 	"net/http"
 
+	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/qor/auth"
+	"golang.org/x/oauth2"
 )
 
 var (
 	AuthorizeURL = "https://github.com/login/oauth/authorize"
 	TokenURL     = "https://github.com/login/oauth/access_token"
 )
+
+// twitterProvider provide login with twitter method
+type TwitterProvider struct {
+	*Config
+	OAuthConfig *oauth2.Config
+}
 
 // Config twitter Config
 type Config struct {
@@ -43,12 +51,18 @@ func New(config *Config) *TwitterProvider {
 		config.TokenURL = TokenURL
 	}
 
-	return &TwitterProvider{Config: config}
-}
+	oauthCfg := &oauth2.Config{
+		ClientID:     config.ClientID,
+		ClientSecret: config.ClientSecret,
+		Endpoint: oauth2.Endpoint{
+			AuthURL:  config.AuthorizeURL,
+			TokenURL: config.TokenURL,
+		},
+		RedirectURL: config.RedirectURL,
+		Scopes:      config.Scopes,
+	}
 
-// twitterProvider provide login with twitter method
-type TwitterProvider struct {
-	*Config
+	return &TwitterProvider{Config: config, OAuthConfig: oauthCfg}
 }
 
 // GetName return provider name
@@ -61,7 +75,13 @@ func (TwitterProvider) ConfigAuth(*auth.Auth) {
 }
 
 // Login implemented login with twitter provider
-func (TwitterProvider) Login(request *http.Request, writer http.ResponseWriter, session *auth.Session) {
+func (provider TwitterProvider) Login(request *http.Request, writer http.ResponseWriter, session *auth.Session) {
+	token := jwt.New(session.Auth.Config.SigningMethod)
+	token.Raw = "state"
+	signedToken, _ := token.SignedString([]byte(session.Auth.Config.SignedString))
+
+	url := provider.OAuthConfig.AuthCodeURL(signedToken)
+	http.Redirect(writer, request, url, http.StatusFound)
 }
 
 // Logout implemented logout with twitter provider
