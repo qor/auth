@@ -17,7 +17,6 @@ var (
 // githubProvider provide login with github method
 type GithubProvider struct {
 	*Config
-	OAuthConfig *oauth2.Config
 }
 
 // Config github Config
@@ -51,18 +50,7 @@ func New(config *Config) *GithubProvider {
 		config.TokenURL = TokenURL
 	}
 
-	oauthCfg := &oauth2.Config{
-		ClientID:     config.ClientID,
-		ClientSecret: config.ClientSecret,
-		Endpoint: oauth2.Endpoint{
-			AuthURL:  config.AuthorizeURL,
-			TokenURL: config.TokenURL,
-		},
-		RedirectURL: config.RedirectURL,
-		Scopes:      config.Scopes,
-	}
-
-	return &GithubProvider{Config: config, OAuthConfig: oauthCfg}
+	return &GithubProvider{Config: config}
 }
 
 // GetName return provider name
@@ -74,14 +62,37 @@ func (GithubProvider) GetName() string {
 func (GithubProvider) ConfigAuth(*auth.Auth) {
 }
 
+// OAuthConfig return oauth config based on configuration
+func (provider GithubProvider) OAuthConfig(req *http.Request, session *auth.Session) *oauth2.Config {
+	var (
+		config = provider.Config
+		scheme = req.URL.Scheme
+	)
+
+	if scheme == "" {
+		scheme = "http://"
+	}
+
+	return &oauth2.Config{
+		ClientID:     config.ClientID,
+		ClientSecret: config.ClientSecret,
+		Endpoint: oauth2.Endpoint{
+			AuthURL:  config.AuthorizeURL,
+			TokenURL: config.TokenURL,
+		},
+		RedirectURL: scheme + req.Host + session.AuthURL("github/callback"),
+		Scopes:      config.Scopes,
+	}
+}
+
 // Login implemented login with github provider
-func (provider GithubProvider) Login(request *http.Request, writer http.ResponseWriter, session *auth.Session) {
+func (provider GithubProvider) Login(req *http.Request, writer http.ResponseWriter, session *auth.Session) {
 	token := jwt.New(session.Auth.Config.SigningMethod)
 	token.Raw = "state"
 	signedToken, _ := token.SignedString([]byte(session.Auth.Config.SignedString))
 
-	url := provider.OAuthConfig.AuthCodeURL(signedToken)
-	http.Redirect(writer, request, url, http.StatusFound)
+	url := provider.OAuthConfig(req, session).AuthCodeURL(signedToken)
+	http.Redirect(writer, req, url, http.StatusFound)
 }
 
 // Logout implemented logout with github provider
