@@ -4,11 +4,13 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"reflect"
 
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/google/go-github/github"
 	"github.com/qor/auth"
 	"github.com/qor/auth/auth_identity"
+	"github.com/qor/qor/utils"
 	"golang.org/x/oauth2"
 )
 
@@ -59,8 +61,9 @@ func New(config *Config) *GithubProvider {
 	if config.AuthorizeHandler == nil {
 		config.AuthorizeHandler = func(req *http.Request, writer http.ResponseWriter, session *auth.Session) (interface{}, error) {
 			var (
-				authInfo auth_identity.Basic
-				// tx       = session.Auth.GetDB(req)
+				currentUser interface{}
+				authInfo    auth_identity.Basic
+				tx          = session.Auth.GetDB(req)
 			)
 
 			state := req.URL.Query().Get("state")
@@ -91,7 +94,22 @@ func New(config *Config) *GithubProvider {
 
 				authInfo.Provider = provider.GetName()
 				authInfo.UID = fmt.Sprint(*user.ID)
-				return nil, nil
+
+				authIdentity := reflect.New(utils.ModelType(session.Auth.Config.AuthIdentityModel)).Interface()
+
+				if session.Auth.Config.UserModel != nil {
+					currentUser = reflect.New(utils.ModelType(session.Auth.Config.UserModel)).Interface()
+					if err = tx.Create(currentUser).Error; err == nil {
+						authInfo.UserID = fmt.Sprint(tx.NewScope(currentUser).PrimaryKeyValue())
+					} else {
+						return nil, err
+					}
+				} else {
+					currentUser = authIdentity
+				}
+
+				err = tx.Where(authInfo).FirstOrCreate(authIdentity).Error
+				return currentUser, err
 			}
 
 			return nil, err
@@ -146,7 +164,8 @@ func (GithubProvider) Logout(request *http.Request, writer http.ResponseWriter, 
 }
 
 // Register implemented register with github provider
-func (GithubProvider) Register(request *http.Request, writer http.ResponseWriter, session *auth.Session) {
+func (provider GithubProvider) Register(request *http.Request, writer http.ResponseWriter, session *auth.Session) {
+	provider.Login(request, writer, session)
 }
 
 // Callback implement Callback with github provider
