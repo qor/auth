@@ -88,7 +88,7 @@ func New(config *Config) *GithubProvider {
 				}
 
 				client := github.NewClient(oauthCfg.Client(oauth2.NoContext, tkn))
-				user, _, err := client.Users.Get("")
+				user, _, err := client.Users.Get(oauth2.NoContext, "")
 				if err != nil {
 					return nil, err
 				}
