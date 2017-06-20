@@ -56,6 +56,10 @@ func New(config *Config) *GoogleProvider {
 		config.TokenURL = google.Endpoint.TokenURL
 	}
 
+	if len(config.Scopes) == 0 {
+		config.Scopes = []string{"https://www.googleapis.com/auth/userinfo.email"}
+	}
+
 	if config.AuthorizeHandler == nil {
 		config.AuthorizeHandler = func(req *http.Request, writer http.ResponseWriter, session *auth.Session) (interface{}, error) {
 			var (
