@@ -139,10 +139,6 @@ func (GoogleProvider) GetName() string {
 	return "google"
 }
 
-// ConfigAuth implemented ConfigAuth for google provider
-func (GoogleProvider) ConfigAuth(*auth.Auth) {
-}
-
 // OAuthConfig return oauth config based on configuration
 func (provider GoogleProvider) OAuthConfig(req *http.Request, session *auth.Session) *oauth2.Config {
 	var (

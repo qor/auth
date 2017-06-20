@@ -1,7 +1,7 @@
-package auth
+package encryptor
 
-// EncryptorInterface encryptor interface
-type EncryptorInterface interface {
+// Interface encryptor interface
+type Interface interface {
 	Digest(password string) (string, error)
 	Compare(hashedPassword string, password string) error
 }

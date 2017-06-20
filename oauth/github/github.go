@@ -134,10 +134,6 @@ func (GithubProvider) GetName() string {
 	return "github"
 }
 
-// ConfigAuth implemented ConfigAuth for github provider
-func (GithubProvider) ConfigAuth(*auth.Auth) {
-}
-
 // OAuthConfig return oauth config based on configuration
 func (provider GithubProvider) OAuthConfig(req *http.Request, session *auth.Session) *oauth2.Config {
 	var (

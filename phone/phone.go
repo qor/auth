@@ -19,10 +19,6 @@ func (PhoneProvider) GetName() string {
 	return "phone"
 }
 
-// ConfigAuth implemented ConfigAuth for phone provider
-func (PhoneProvider) ConfigAuth(*auth.Auth) {
-}
-
 // Login implemented login with phone provider
 func (PhoneProvider) Login(request *http.Request, writer http.ResponseWriter, session *auth.Session) {
 }
