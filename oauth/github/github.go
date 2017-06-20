@@ -61,9 +61,10 @@ func New(config *Config) *GithubProvider {
 	if config.AuthorizeHandler == nil {
 		config.AuthorizeHandler = func(req *http.Request, writer http.ResponseWriter, session *auth.Session) (interface{}, error) {
 			var (
-				currentUser interface{}
-				authInfo    auth_identity.Basic
-				tx          = session.Auth.GetDB(req)
+				currentUser  interface{}
+				authInfo     auth_identity.Basic
+				tx           = session.Auth.GetDB(req)
+				authIdentity = reflect.New(utils.ModelType(session.Auth.Config.AuthIdentityModel)).Interface()
 			)
 
 			state := req.URL.Query().Get("state")
@@ -95,7 +96,17 @@ func New(config *Config) *GithubProvider {
 				authInfo.Provider = provider.GetName()
 				authInfo.UID = fmt.Sprint(*user.ID)
 
-				authIdentity := reflect.New(utils.ModelType(session.Auth.Config.AuthIdentityModel)).Interface()
+				if !tx.Model(authIdentity).Where(authInfo).Scan(&authInfo).RecordNotFound() {
+					if session.Auth.Config.UserModel != nil {
+						if authInfo.UserID == "" {
+							return nil, auth.ErrInvalidAccount
+						}
+						currentUser := reflect.New(utils.ModelType(session.Auth.Config.UserModel)).Interface()
+						err := tx.First(currentUser, authInfo.UserID).Error
+						return currentUser, err
+					}
+					return authInfo, nil
+				}
 
 				if session.Auth.Config.UserModel != nil {
 					currentUser = reflect.New(utils.ModelType(session.Auth.Config.UserModel)).Interface()
