@@ -1,10 +1,6 @@
 package phone
 
-import (
-	"net/http"
-
-	"github.com/qor/auth"
-)
+import "github.com/qor/auth"
 
 func New() *PhoneProvider {
 	return &PhoneProvider{}
@@ -20,21 +16,21 @@ func (PhoneProvider) GetName() string {
 }
 
 // Login implemented login with phone provider
-func (PhoneProvider) Login(request *http.Request, writer http.ResponseWriter, session *auth.Session) {
+func (PhoneProvider) Login(context *auth.Context) {
 }
 
 // Logout implemented logout with phone provider
-func (PhoneProvider) Logout(request *http.Request, writer http.ResponseWriter, session *auth.Session) {
+func (PhoneProvider) Logout(context *auth.Context) {
 }
 
 // Register implemented register with phone provider
-func (PhoneProvider) Register(request *http.Request, writer http.ResponseWriter, session *auth.Session) {
+func (PhoneProvider) Register(context *auth.Context) {
 }
 
 // Callback implement Callback with phone provider
-func (PhoneProvider) Callback(*http.Request, http.ResponseWriter, *auth.Session) {
+func (PhoneProvider) Callback(*auth.Context) {
 }
 
 // ServeHTTP implement ServeHTTP with phone provider
-func (PhoneProvider) ServeHTTP(*http.Request, http.ResponseWriter, *auth.Session) {
+func (PhoneProvider) ServeHTTP(*auth.Context) {
 }

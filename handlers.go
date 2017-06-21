@@ -10,23 +10,28 @@ import (
 )
 
 // DefaultLoginHandler default login behaviour
-var DefaultLoginHandler = func(req *http.Request, w http.ResponseWriter, session *Session, authorize func(*http.Request, http.ResponseWriter, *Session) (interface{}, error)) {
-	tx := session.Auth.GetDB(req)
-	currentUser, err := authorize(req, w, session)
+var DefaultLoginHandler = func(context *Context, authorize func(*Context) (interface{}, error)) {
+	var (
+		req              = context.Request
+		w                = context.Writer
+		tx               = context.Auth.GetDB(req)
+		currentUser, err = authorize(context)
+	)
+
 	if err == nil {
 		if currentUser != nil {
 			claims := &Claims{}
 			claims.Id = fmt.Sprint(tx.NewScope(currentUser).PrimaryKeyValue())
-			token := session.Auth.SignedToken(claims)
-			context := &qor.Context{
+			token := context.Auth.SignedToken(claims)
+			qorContext := &qor.Context{
 				Request: req,
 				Writer:  w,
 			}
 
 			utils.SetCookie(http.Cookie{
-				Name:  session.Auth.Config.SessionName,
+				Name:  context.Auth.Config.SessionName,
 				Value: token,
-			}, context)
+			}, qorContext)
 
 			responder.With("html", func() {
 				// write cookie
@@ -40,15 +45,20 @@ var DefaultLoginHandler = func(req *http.Request, w http.ResponseWriter, session
 	}
 
 	responder.With("html", func() {
-		session.Auth.Config.Render.Execute("auth/login", session, req, w)
+		context.Auth.Config.Render.Execute("auth/login", context, req, w)
 	}).With([]string{"json"}, func() {
 		// write json error
 	})
 }
 
 // DefaultRegisterHandler default register behaviour
-var DefaultRegisterHandler = func(req *http.Request, w http.ResponseWriter, session *Session, register func(*http.Request, http.ResponseWriter, *Session) (interface{}, error)) {
-	user, err := register(req, w, session)
+var DefaultRegisterHandler = func(context *Context, register func(*Context) (interface{}, error)) {
+	var (
+		req       = context.Request
+		w         = context.Writer
+		user, err = register(context)
+	)
+
 	if err == nil {
 		if user != nil {
 			// registered
@@ -57,20 +67,19 @@ var DefaultRegisterHandler = func(req *http.Request, w http.ResponseWriter, sess
 	}
 
 	responder.With("html", func() {
-		session.Auth.Config.Render.Execute("auth/register", session, req, w)
+		context.Auth.Config.Render.Execute("auth/register", context, req, w)
 	}).With([]string{"json"}, func() {
 		// write json error
 	})
 }
 
 // DefaultLogoutHandler default logout behaviour
-var DefaultLogoutHandler = func(req *http.Request, w http.ResponseWriter, session *Session) {
-	context := &qor.Context{
-		Request: req,
-		Writer:  w,
+var DefaultLogoutHandler = func(context *Context) {
+	qorContext := &qor.Context{
+		Request: context.Request,
+		Writer:  context.Writer,
 	}
 
-	utils.SetCookie(http.Cookie{Name: session.Auth.Config.SessionName, Value: ""}, context)
-
-	http.Redirect(w, req, "/", http.StatusSeeOther)
+	utils.SetCookie(http.Cookie{Name: context.Auth.Config.SessionName, Value: ""}, qorContext)
+	http.Redirect(context.Writer, context.Request, "/", http.StatusSeeOther)
 }

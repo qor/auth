@@ -26,10 +26,17 @@ type Config struct {
 	SignedString      string
 	UserModel         interface{}
 	AuthIdentityModel interface{}
+	UserStorer        Storer
 
-	LoginHandler    func(*http.Request, http.ResponseWriter, *Session, func(*http.Request, http.ResponseWriter, *Session) (interface{}, error))
-	RegisterHandler func(*http.Request, http.ResponseWriter, *Session, func(*http.Request, http.ResponseWriter, *Session) (interface{}, error))
-	LogoutHandler   func(*http.Request, http.ResponseWriter, *Session)
+	LoginHandler    func(*Context, func(*Context) (interface{}, error))
+	RegisterHandler func(*Context, func(*Context) (interface{}, error))
+	LogoutHandler   func(*Context)
+}
+
+// Storer storer interface
+type Storer interface {
+	Save(schema Schema, context *Context) (user interface{}, userID string, err error)
+	Get(userID string, context *Context) (user interface{}, err error)
 }
 
 // New initialize Auth

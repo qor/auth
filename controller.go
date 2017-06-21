@@ -21,27 +21,27 @@ func (serveMux *serveMux) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		claims  *Claims
 		reqPath = strings.TrimPrefix(req.URL.Path, serveMux.Prefix)
 		paths   = strings.Split(reqPath, "/")
-		session = &Session{Auth: serveMux.Auth, Claims: claims}
+		context = &Context{Auth: serveMux.Auth, Claims: claims, Request: req, Writer: w}
 	)
 
 	if len(paths) >= 2 {
 		// eg: /phone/login
 
 		if provider := serveMux.Auth.GetProvider(paths[0]); provider != nil {
-			session.Provider = provider
+			context.Provider = provider
 
 			// serve mux
 			switch paths[1] {
 			case "login":
-				provider.Login(req, w, session)
+				provider.Login(context)
 			case "logout":
-				provider.Logout(req, w, session)
+				provider.Logout(context)
 			case "register":
-				provider.Register(req, w, session)
+				provider.Register(context)
 			case "callback":
-				provider.Callback(req, w, session)
+				provider.Callback(context)
 			default:
-				provider.ServeHTTP(req, w, session)
+				provider.ServeHTTP(context)
 			}
 			return
 		}
@@ -51,28 +51,20 @@ func (serveMux *serveMux) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		switch paths[0] {
 		case "login":
 			// render login page
-			serveMux.Auth.Render.Execute("auth/login", session, req, w)
+			serveMux.Auth.Render.Execute("auth/login", context, req, w)
 			return
 		case "logout":
-			// destroy login session
-			serveMux.Auth.LogoutHandler(req, w, session)
+			// destroy login context
+			serveMux.Auth.LogoutHandler(context)
 			return
 		case "register":
 			// render register page
-			serveMux.Auth.Render.Execute("auth/register", session, req, w)
+			serveMux.Auth.Render.Execute("auth/register", context, req, w)
 			return
 		}
 	}
 
 	http.NotFound(w, req)
-}
-
-// Session session
-type Session struct {
-	*Auth
-	*Claims
-	Provider
-	Params map[string]interface{}
 }
 
 // AuthURL generate URL for auth

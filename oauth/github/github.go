@@ -19,7 +19,7 @@ var (
 	TokenURL     = "https://github.com/login/oauth/access_token"
 )
 
-// githubProvider provide login with github method
+// GithubProvider provide login with github method
 type GithubProvider struct {
 	*Config
 }
@@ -32,7 +32,7 @@ type Config struct {
 	TokenURL         string
 	RedirectURL      string
 	Scopes           []string
-	AuthorizeHandler func(request *http.Request, writer http.ResponseWriter, session *auth.Session) (interface{}, error)
+	AuthorizeHandler func(*auth.Context) (interface{}, error)
 }
 
 func New(config *Config) *GithubProvider {
@@ -59,20 +59,21 @@ func New(config *Config) *GithubProvider {
 	}
 
 	if config.AuthorizeHandler == nil {
-		config.AuthorizeHandler = func(req *http.Request, writer http.ResponseWriter, session *auth.Session) (interface{}, error) {
+		config.AuthorizeHandler = func(context *auth.Context) (interface{}, error) {
 			var (
 				currentUser  interface{}
 				authInfo     auth_identity.Basic
-				tx           = session.Auth.GetDB(req)
-				authIdentity = reflect.New(utils.ModelType(session.Auth.Config.AuthIdentityModel)).Interface()
+				authIdentity = reflect.New(utils.ModelType(context.Auth.Config.AuthIdentityModel)).Interface()
+				req          = context.Request
+				tx           = context.Auth.GetDB(req)
 			)
 
 			state := req.URL.Query().Get("state")
 			token, err := jwt.Parse(state, func(token *jwt.Token) (interface{}, error) {
-				if token.Method != session.Auth.Config.SigningMethod {
+				if token.Method != context.Auth.Config.SigningMethod {
 					return nil, fmt.Errorf("unexpected signing method")
 				}
-				return []byte(session.Auth.Config.SignedString), nil
+				return []byte(context.Auth.Config.SignedString), nil
 			})
 
 			if claims, ok := token.Claims.(*jwt.StandardClaims); ok && (!token.Valid || claims.Subject != "state") {
@@ -80,7 +81,7 @@ func New(config *Config) *GithubProvider {
 			}
 
 			if err == nil {
-				oauthCfg := provider.OAuthConfig(req, session)
+				oauthCfg := provider.OAuthConfig(context)
 				tkn, err := oauthCfg.Exchange(oauth2.NoContext, req.URL.Query().Get("code"))
 
 				if err != nil {
@@ -97,19 +98,19 @@ func New(config *Config) *GithubProvider {
 				authInfo.UID = fmt.Sprint(*user.ID)
 
 				if !tx.Model(authIdentity).Where(authInfo).Scan(&authInfo).RecordNotFound() {
-					if session.Auth.Config.UserModel != nil {
+					if context.Auth.Config.UserModel != nil {
 						if authInfo.UserID == "" {
 							return nil, auth.ErrInvalidAccount
 						}
-						currentUser := reflect.New(utils.ModelType(session.Auth.Config.UserModel)).Interface()
+						currentUser := reflect.New(utils.ModelType(context.Auth.Config.UserModel)).Interface()
 						err := tx.First(currentUser, authInfo.UserID).Error
 						return currentUser, err
 					}
 					return authInfo, nil
 				}
 
-				if session.Auth.Config.UserModel != nil {
-					currentUser = reflect.New(utils.ModelType(session.Auth.Config.UserModel)).Interface()
+				if context.Auth.Config.UserModel != nil {
+					currentUser = reflect.New(utils.ModelType(context.Auth.Config.UserModel)).Interface()
 					if err = tx.Create(currentUser).Error; err == nil {
 						authInfo.UserID = fmt.Sprint(tx.NewScope(currentUser).PrimaryKeyValue())
 					} else {
@@ -135,9 +136,10 @@ func (GithubProvider) GetName() string {
 }
 
 // OAuthConfig return oauth config based on configuration
-func (provider GithubProvider) OAuthConfig(req *http.Request, session *auth.Session) *oauth2.Config {
+func (provider GithubProvider) OAuthConfig(context *auth.Context) *oauth2.Config {
 	var (
 		config = provider.Config
+		req    = context.Request
 		scheme = req.URL.Scheme
 	)
 
@@ -152,34 +154,34 @@ func (provider GithubProvider) OAuthConfig(req *http.Request, session *auth.Sess
 			AuthURL:  config.AuthorizeURL,
 			TokenURL: config.TokenURL,
 		},
-		RedirectURL: scheme + req.Host + session.AuthURL("github/callback"),
+		RedirectURL: scheme + req.Host + context.Auth.AuthURL("github/callback"),
 		Scopes:      config.Scopes,
 	}
 }
 
 // Login implemented login with github provider
-func (provider GithubProvider) Login(req *http.Request, writer http.ResponseWriter, session *auth.Session) {
-	token := jwt.NewWithClaims(session.Auth.Config.SigningMethod, jwt.StandardClaims{Subject: "state"})
-	signedToken, _ := token.SignedString([]byte(session.Auth.Config.SignedString))
+func (provider GithubProvider) Login(context *auth.Context) {
+	token := jwt.NewWithClaims(context.Auth.Config.SigningMethod, jwt.StandardClaims{Subject: "state"})
+	signedToken, _ := token.SignedString([]byte(context.Auth.Config.SignedString))
 
-	url := provider.OAuthConfig(req, session).AuthCodeURL(signedToken)
-	http.Redirect(writer, req, url, http.StatusFound)
+	url := provider.OAuthConfig(context).AuthCodeURL(signedToken)
+	http.Redirect(context.Writer, context.Request, url, http.StatusFound)
 }
 
 // Logout implemented logout with github provider
-func (GithubProvider) Logout(request *http.Request, writer http.ResponseWriter, session *auth.Session) {
+func (GithubProvider) Logout(context *auth.Context) {
 }
 
 // Register implemented register with github provider
-func (provider GithubProvider) Register(request *http.Request, writer http.ResponseWriter, session *auth.Session) {
-	provider.Login(request, writer, session)
+func (provider GithubProvider) Register(context *auth.Context) {
+	provider.Login(context)
 }
 
 // Callback implement Callback with github provider
-func (provider GithubProvider) Callback(req *http.Request, writer http.ResponseWriter, session *auth.Session) {
-	session.Auth.LoginHandler(req, writer, session, provider.AuthorizeHandler)
+func (provider GithubProvider) Callback(context *auth.Context) {
+	context.Auth.LoginHandler(context, provider.AuthorizeHandler)
 }
 
 // ServeHTTP implement ServeHTTP with github provider
-func (GithubProvider) ServeHTTP(*http.Request, http.ResponseWriter, *auth.Session) {
+func (GithubProvider) ServeHTTP(*auth.Context) {
 }

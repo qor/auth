@@ -2,7 +2,6 @@ package database
 
 import (
 	"fmt"
-	"net/http"
 	"reflect"
 
 	"github.com/qor/auth"
@@ -14,8 +13,8 @@ import (
 
 type Config struct {
 	Encryptor        encryptor.Interface
-	AuthorizeHandler func(request *http.Request, writer http.ResponseWriter, session *auth.Session) (interface{}, error)
-	RegisterHandler  func(request *http.Request, writer http.ResponseWriter, session *auth.Session) (interface{}, error)
+	AuthorizeHandler func(*auth.Context) (interface{}, error)
+	RegisterHandler  func(*auth.Context) (interface{}, error)
 }
 
 // New initialize database provider
@@ -31,25 +30,26 @@ func New(config *Config) *DatabaseProvider {
 	provider := &DatabaseProvider{Config: config}
 
 	if config.AuthorizeHandler == nil {
-		config.AuthorizeHandler = func(request *http.Request, writer http.ResponseWriter, session *auth.Session) (interface{}, error) {
+		config.AuthorizeHandler = func(context *auth.Context) (interface{}, error) {
 			var (
 				authInfo auth_identity.Basic
-				tx       = session.Auth.GetDB(request)
+				request  = context.Request
+				tx       = context.Auth.GetDB(request)
 			)
 
 			request.ParseForm()
 			authInfo.Provider = provider.GetName()
 			authInfo.UID = request.Form.Get("login")
-			if tx.Model(session.Auth.AuthIdentityModel).Where(authInfo).Scan(&authInfo).RecordNotFound() {
+			if tx.Model(context.Auth.AuthIdentityModel).Where(authInfo).Scan(&authInfo).RecordNotFound() {
 				return nil, auth.ErrInvalidAccount
 			}
 
 			if err := config.Encryptor.Compare(authInfo.EncryptedPassword, request.Form.Get("password")); err == nil {
-				if session.Auth.Config.UserModel != nil {
+				if context.Auth.Config.UserModel != nil {
 					if authInfo.UserID == "" {
 						return nil, auth.ErrInvalidAccount
 					}
-					currentUser := reflect.New(utils.ModelType(session.Auth.Config.UserModel)).Interface()
+					currentUser := reflect.New(utils.ModelType(context.Auth.Config.UserModel)).Interface()
 					err := tx.First(currentUser, authInfo.UserID).Error
 					return currentUser, err
 				}
@@ -61,11 +61,12 @@ func New(config *Config) *DatabaseProvider {
 	}
 
 	if config.RegisterHandler == nil {
-		config.RegisterHandler = func(request *http.Request, writer http.ResponseWriter, session *auth.Session) (interface{}, error) {
+		config.RegisterHandler = func(context *auth.Context) (interface{}, error) {
 			var (
 				err      error
 				authInfo auth_identity.Basic
-				tx       = session.Auth.GetDB(request)
+				request  = context.Request
+				tx       = context.Auth.GetDB(request)
 			)
 
 			request.ParseForm()
@@ -80,13 +81,13 @@ func New(config *Config) *DatabaseProvider {
 			authInfo.Provider = provider.GetName()
 			authInfo.UID = request.Form.Get("login")
 
-			if !tx.Model(session.Auth.AuthIdentityModel).Where(authInfo).Scan(&authInfo).RecordNotFound() {
+			if !tx.Model(context.Auth.AuthIdentityModel).Where(authInfo).Scan(&authInfo).RecordNotFound() {
 				return nil, auth.ErrInvalidAccount
 			}
 
 			if authInfo.EncryptedPassword, err = config.Encryptor.Digest(request.Form.Get("password")); err == nil {
-				if session.Auth.Config.UserModel != nil {
-					user := reflect.New(utils.ModelType(session.Auth.Config.UserModel)).Interface()
+				if context.Auth.Config.UserModel != nil {
+					user := reflect.New(utils.ModelType(context.Auth.Config.UserModel)).Interface()
 					if err = tx.Create(user).Error; err == nil {
 						authInfo.UserID = fmt.Sprint(tx.NewScope(user).PrimaryKeyValue())
 					} else {
@@ -94,7 +95,7 @@ func New(config *Config) *DatabaseProvider {
 					}
 				}
 
-				authIdentity := reflect.New(utils.ModelType(session.Auth.Config.AuthIdentityModel)).Interface()
+				authIdentity := reflect.New(utils.ModelType(context.Auth.Config.AuthIdentityModel)).Interface()
 				err = tx.Where(authInfo).FirstOrCreate(authIdentity).Error
 			}
 
@@ -116,24 +117,24 @@ func (DatabaseProvider) GetName() string {
 }
 
 // Login implemented login with database provider
-func (provider DatabaseProvider) Login(request *http.Request, writer http.ResponseWriter, session *auth.Session) {
-	session.Auth.LoginHandler(request, writer, session, provider.AuthorizeHandler)
+func (provider DatabaseProvider) Login(context *auth.Context) {
+	context.Auth.LoginHandler(context, provider.AuthorizeHandler)
 }
 
 // Register implemented register with database provider
-func (provider DatabaseProvider) Register(request *http.Request, writer http.ResponseWriter, session *auth.Session) {
-	session.Auth.RegisterHandler(request, writer, session, provider.RegisterHandler)
+func (provider DatabaseProvider) Register(context *auth.Context) {
+	context.Auth.RegisterHandler(context, provider.RegisterHandler)
 }
 
 // Logout implemented logout with database provider
-func (provider DatabaseProvider) Logout(request *http.Request, writer http.ResponseWriter, session *auth.Session) {
-	session.Auth.LogoutHandler(request, writer, session)
+func (provider DatabaseProvider) Logout(context *auth.Context) {
+	context.Auth.LogoutHandler(context)
 }
 
 // Callback implement Callback with database provider
-func (provider DatabaseProvider) Callback(req *http.Request, writer http.ResponseWriter, session *auth.Session) {
+func (provider DatabaseProvider) Callback(context *auth.Context) {
 }
 
 // ServeHTTP implement ServeHTTP with database provider
-func (provider DatabaseProvider) ServeHTTP(req *http.Request, writer http.ResponseWriter, session *auth.Session) {
+func (provider DatabaseProvider) ServeHTTP(context *auth.Context) {
 }
