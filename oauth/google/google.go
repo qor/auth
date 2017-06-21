@@ -1,6 +1,7 @@
 package google
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -91,17 +92,29 @@ func New(config *Config) *GoogleProvider {
 					return nil, err
 				}
 
-				client := oauthCfg.Client(oauth2.NoContext, tkn)
-				resp, err := client.Get(UserInfoURL)
-				if err != nil {
-					return nil, err
+				{
+					client := oauthCfg.Client(oauth2.NoContext, tkn)
+					resp, err := client.Get(UserInfoURL)
+					if err != nil {
+						return nil, err
+					}
+
+					defer resp.Body.Close()
+					body, _ := ioutil.ReadAll(resp.Body)
+					userInfo := UserInfo{}
+					json.Unmarshal(body, &userInfo)
+					schema.Provider = provider.GetName()
+					schema.UID = userInfo.Email
+					schema.Email = userInfo.Email
+					schema.FirstName = userInfo.GivenName
+					schema.LastName = userInfo.FamilyName
+					schema.Image = userInfo.Picture
+					schema.Name = userInfo.Name
+					schema.RawInfo = userInfo
 				}
 
-				defer resp.Body.Close()
-				email, _ := ioutil.ReadAll(resp.Body)
-
 				authInfo.Provider = provider.GetName()
-				authInfo.UID = string(email)
+				authInfo.UID = schema.UID
 
 				if !tx.Model(authIdentity).Where(authInfo).Scan(&authInfo).RecordNotFound() {
 					if authInfo.UserID != "" {
@@ -185,4 +198,17 @@ func (provider GoogleProvider) Callback(context *auth.Context) {
 
 // ServeHTTP implement ServeHTTP with google provider
 func (GoogleProvider) ServeHTTP(*auth.Context) {
+}
+
+// UserInfo google user info structure
+type UserInfo struct {
+	Sub           string `json:"sub"`
+	Name          string `json:"name"`
+	GivenName     string `json:"given_name"`
+	FamilyName    string `json:"family_name"`
+	Picture       string `json:"picture"`
+	Profile       string `json:"profile"`
+	Email         string `json:"email"`
+	EmailVerified bool   `json:"email_verified"`
+	Gender        string `json:"gender"`
 }
