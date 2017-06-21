@@ -124,15 +124,15 @@ func New(config *Config) *GoogleProvider {
 					return authInfo, nil
 				}
 
-				if context.Auth.Config.UserModel != nil {
-					if user, userID, err := context.Auth.UserStorer.Save(&schema, context); err == nil {
+				if user, userID, err := context.Auth.UserStorer.Save(&schema, context); err == nil {
+					if userID != "" {
 						currentUser = user
 						authInfo.UserID = userID
 					} else {
-						return nil, err
+						currentUser = authIdentity
 					}
 				} else {
-					currentUser = authIdentity
+					return nil, err
 				}
 
 				err = tx.Where(authInfo).FirstOrCreate(authIdentity).Error

@@ -1,7 +1,6 @@
 package database
 
 import (
-	"fmt"
 	"reflect"
 
 	"github.com/qor/auth"
@@ -40,18 +39,14 @@ func New(config *Config) *DatabaseProvider {
 			request.ParseForm()
 			authInfo.Provider = provider.GetName()
 			authInfo.UID = request.Form.Get("login")
+
 			if tx.Model(context.Auth.AuthIdentityModel).Where(authInfo).Scan(&authInfo).RecordNotFound() {
 				return nil, auth.ErrInvalidAccount
 			}
 
 			if err := config.Encryptor.Compare(authInfo.EncryptedPassword, request.Form.Get("password")); err == nil {
-				if context.Auth.Config.UserModel != nil {
-					if authInfo.UserID == "" {
-						return nil, auth.ErrInvalidAccount
-					}
-					currentUser := reflect.New(utils.ModelType(context.Auth.Config.UserModel)).Interface()
-					err := tx.First(currentUser, authInfo.UserID).Error
-					return currentUser, err
+				if authInfo.UserID != "" {
+					return context.Auth.UserStorer.Get(authInfo.UserID, context)
 				}
 				return authInfo, err
 			}
@@ -63,10 +58,13 @@ func New(config *Config) *DatabaseProvider {
 	if config.RegisterHandler == nil {
 		config.RegisterHandler = func(context *auth.Context) (interface{}, error) {
 			var (
-				err      error
-				authInfo auth_identity.Basic
-				request  = context.Request
-				tx       = context.Auth.GetDB(request)
+				err          error
+				schema       auth.Schema
+				currentUser  interface{}
+				authInfo     auth_identity.Basic
+				request      = context.Request
+				tx           = context.Auth.GetDB(request)
+				authIdentity = reflect.New(utils.ModelType(context.Auth.Config.AuthIdentityModel)).Interface()
 			)
 
 			request.ParseForm()
@@ -81,22 +79,31 @@ func New(config *Config) *DatabaseProvider {
 			authInfo.Provider = provider.GetName()
 			authInfo.UID = request.Form.Get("login")
 
+			{
+				schema.Provider = authInfo.Provider
+				schema.UID = authInfo.UID
+				schema.Email = authInfo.UID
+				schema.RawInfo = request
+			}
+
 			if !tx.Model(context.Auth.AuthIdentityModel).Where(authInfo).Scan(&authInfo).RecordNotFound() {
 				return nil, auth.ErrInvalidAccount
 			}
 
 			if authInfo.EncryptedPassword, err = config.Encryptor.Digest(request.Form.Get("password")); err == nil {
-				if context.Auth.Config.UserModel != nil {
-					user := reflect.New(utils.ModelType(context.Auth.Config.UserModel)).Interface()
-					if err = tx.Create(user).Error; err == nil {
-						authInfo.UserID = fmt.Sprint(tx.NewScope(user).PrimaryKeyValue())
+				if user, userID, err := context.Auth.UserStorer.Save(&schema, context); err == nil {
+					if userID != "" {
+						currentUser = user
+						authInfo.UserID = userID
 					} else {
-						return nil, err
+						currentUser = authIdentity
 					}
+				} else {
+					return nil, err
 				}
 
-				authIdentity := reflect.New(utils.ModelType(context.Auth.Config.AuthIdentityModel)).Interface()
 				err = tx.Where(authInfo).FirstOrCreate(authIdentity).Error
+				return currentUser, err
 			}
 
 			return nil, err
