@@ -98,9 +98,9 @@ func New(config *Config) *GithubProvider {
 				{
 					schema.Provider = provider.GetName()
 					schema.UID = fmt.Sprint(*user.ID)
-					schema.Info.Name = user.GetName()
-					schema.Info.Email = user.GetEmail()
-					schema.Info.Image = user.GetAvatarURL()
+					schema.Name = user.GetName()
+					schema.Email = user.GetEmail()
+					schema.Image = user.GetAvatarURL()
 					schema.RawInfo = user
 				}
 
@@ -116,7 +116,8 @@ func New(config *Config) *GithubProvider {
 				}
 
 				if context.Auth.Config.UserModel != nil {
-					if _, userID, err := context.Auth.UserStorer.Save(&schema, context); err == nil {
+					if user, userID, err := context.Auth.UserStorer.Save(&schema, context); err == nil {
+						currentUser = user
 						authInfo.UserID = userID
 					} else {
 						return nil, err
