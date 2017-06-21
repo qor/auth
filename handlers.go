@@ -23,10 +23,10 @@ func respondAfterLogged(claims *Claims, context *Context) {
 
 	responder.With("html", func() {
 		// write cookie
-		http.Redirect(w, req, "/", http.StatusSeeOther)
+		http.Redirect(context.Writer, context.Request, "/", http.StatusSeeOther)
 	}).With([]string{"json"}, func() {
 		// write json token
-	}).Respond(req)
+	}).Respond(context.Request)
 }
 
 // DefaultLoginHandler default login behaviour

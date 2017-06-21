@@ -31,7 +31,7 @@ type Config struct {
 	TokenURL         string
 	RedirectURL      string
 	Scopes           []string
-	AuthorizeHandler func(context *auth.Context) (interface{}, error)
+	AuthorizeHandler func(context *auth.Context) (*auth.Claims, error)
 }
 
 func New(config *Config) *GoogleProvider {
@@ -62,10 +62,9 @@ func New(config *Config) *GoogleProvider {
 	}
 
 	if config.AuthorizeHandler == nil {
-		config.AuthorizeHandler = func(context *auth.Context) (interface{}, error) {
+		config.AuthorizeHandler = func(context *auth.Context) (*auth.Claims, error) {
 			var (
 				req          = context.Request
-				currentUser  interface{}
 				schema       auth.Schema
 				authInfo     auth_identity.Basic
 				tx           = context.Auth.GetDB(req)
@@ -117,26 +116,26 @@ func New(config *Config) *GoogleProvider {
 				authInfo.UID = schema.UID
 
 				if !tx.Model(authIdentity).Where(authInfo).Scan(&authInfo).RecordNotFound() {
-					if authInfo.UserID != "" {
-						return context.Auth.UserStorer.Get(authInfo.UserID, context)
-					}
-
-					return authInfo, nil
+					claims := auth.Claims{}
+					claims.Provider = authInfo.Provider
+					claims.Id = authInfo.UID
+					return &claims, nil
 				}
 
-				if user, userID, err := context.Auth.UserStorer.Save(&schema, context); err == nil {
+				if _, userID, err := context.Auth.UserStorer.Save(&schema, context); err == nil {
 					if userID != "" {
-						currentUser = user
 						authInfo.UserID = userID
-					} else {
-						currentUser = authIdentity
 					}
 				} else {
 					return nil, err
 				}
 
-				err = tx.Where(authInfo).FirstOrCreate(authIdentity).Error
-				return currentUser, err
+				if err = tx.Where(authInfo).FirstOrCreate(authIdentity).Error; err == nil {
+					claims := auth.Claims{}
+					claims.Provider = authInfo.Provider
+					claims.Id = authInfo.UID
+					return &claims, err
+				}
 			}
 
 			return nil, err

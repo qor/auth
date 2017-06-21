@@ -12,8 +12,8 @@ import (
 
 type Config struct {
 	Encryptor        encryptor.Interface
-	AuthorizeHandler func(*auth.Context) (interface{}, error)
-	RegisterHandler  func(*auth.Context) (interface{}, error)
+	AuthorizeHandler func(*auth.Context) (*auth.Claims, error)
+	RegisterHandler  func(*auth.Context) (*auth.Claims, error)
 }
 
 // New initialize database provider
@@ -29,26 +29,26 @@ func New(config *Config) *DatabaseProvider {
 	provider := &DatabaseProvider{Config: config}
 
 	if config.AuthorizeHandler == nil {
-		config.AuthorizeHandler = func(context *auth.Context) (interface{}, error) {
+		config.AuthorizeHandler = func(context *auth.Context) (*auth.Claims, error) {
 			var (
 				authInfo auth_identity.Basic
-				request  = context.Request
-				tx       = context.Auth.GetDB(request)
+				req      = context.Request
+				tx       = context.Auth.GetDB(req)
 			)
 
-			request.ParseForm()
+			req.ParseForm()
 			authInfo.Provider = provider.GetName()
-			authInfo.UID = request.Form.Get("login")
+			authInfo.UID = req.Form.Get("login")
 
 			if tx.Model(context.Auth.AuthIdentityModel).Where(authInfo).Scan(&authInfo).RecordNotFound() {
 				return nil, auth.ErrInvalidAccount
 			}
 
-			if err := config.Encryptor.Compare(authInfo.EncryptedPassword, request.Form.Get("password")); err == nil {
-				if authInfo.UserID != "" {
-					return context.Auth.UserStorer.Get(authInfo.UserID, context)
-				}
-				return authInfo, err
+			if err := config.Encryptor.Compare(authInfo.EncryptedPassword, req.Form.Get("password")); err == nil {
+				claims := auth.Claims{}
+				claims.Provider = authInfo.Provider
+				claims.Id = authInfo.UID
+				return &claims, err
 			}
 
 			return nil, auth.ErrInvalidPassword
@@ -56,11 +56,10 @@ func New(config *Config) *DatabaseProvider {
 	}
 
 	if config.RegisterHandler == nil {
-		config.RegisterHandler = func(context *auth.Context) (interface{}, error) {
+		config.RegisterHandler = func(context *auth.Context) (*auth.Claims, error) {
 			var (
 				err          error
 				schema       auth.Schema
-				currentUser  interface{}
 				authInfo     auth_identity.Basic
 				request      = context.Request
 				tx           = context.Auth.GetDB(request)
@@ -91,19 +90,18 @@ func New(config *Config) *DatabaseProvider {
 			}
 
 			if authInfo.EncryptedPassword, err = config.Encryptor.Digest(request.Form.Get("password")); err == nil {
-				if user, userID, err := context.Auth.UserStorer.Save(&schema, context); err == nil {
-					if userID != "" {
-						currentUser = user
-						authInfo.UserID = userID
-					} else {
-						currentUser = authIdentity
-					}
+				if _, userID, err := context.Auth.UserStorer.Save(&schema, context); err == nil {
+					authInfo.UserID = userID
 				} else {
 					return nil, err
 				}
 
-				err = tx.Where(authInfo).FirstOrCreate(authIdentity).Error
-				return currentUser, err
+				if err = tx.Where(authInfo).FirstOrCreate(authIdentity).Error; err == nil {
+					claims := auth.Claims{}
+					claims.Provider = authInfo.Provider
+					claims.Id = authInfo.UID
+					return &claims, err
+				}
 			}
 
 			return nil, err

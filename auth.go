@@ -28,8 +28,8 @@ type Config struct {
 	AuthIdentityModel interface{}
 	UserStorer        Storer
 
-	LoginHandler    func(*Context, func(*Context) (interface{}, error))
-	RegisterHandler func(*Context, func(*Context) (interface{}, error))
+	LoginHandler    func(*Context, func(*Context) (*Claims, error))
+	RegisterHandler func(*Context, func(*Context) (*Claims, error))
 	LogoutHandler   func(*Context)
 }
 

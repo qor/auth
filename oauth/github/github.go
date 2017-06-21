@@ -32,7 +32,7 @@ type Config struct {
 	TokenURL         string
 	RedirectURL      string
 	Scopes           []string
-	AuthorizeHandler func(*auth.Context) (interface{}, error)
+	AuthorizeHandler func(*auth.Context) (*auth.Claims, error)
 }
 
 func New(config *Config) *GithubProvider {
@@ -59,9 +59,8 @@ func New(config *Config) *GithubProvider {
 	}
 
 	if config.AuthorizeHandler == nil {
-		config.AuthorizeHandler = func(context *auth.Context) (interface{}, error) {
+		config.AuthorizeHandler = func(context *auth.Context) (*auth.Claims, error) {
 			var (
-				currentUser  interface{}
 				schema       auth.Schema
 				authInfo     auth_identity.Basic
 				authIdentity = reflect.New(utils.ModelType(context.Auth.Config.AuthIdentityModel)).Interface()
@@ -108,26 +107,27 @@ func New(config *Config) *GithubProvider {
 				authInfo.UID = fmt.Sprint(*user.ID)
 
 				if !tx.Model(authIdentity).Where(authInfo).Scan(&authInfo).RecordNotFound() {
-					if authInfo.UserID != "" {
-						return context.Auth.UserStorer.Get(authInfo.UserID, context)
-					}
-
-					return authInfo, nil
+					claims := auth.Claims{}
+					claims.Provider = authInfo.Provider
+					claims.Id = authInfo.UID
+					return &claims, nil
 				}
 
-				if user, userID, err := context.Auth.UserStorer.Save(&schema, context); err == nil {
+				if _, userID, err := context.Auth.UserStorer.Save(&schema, context); err == nil {
 					if userID != "" {
-						currentUser = user
 						authInfo.UserID = userID
-					} else {
-						currentUser = authIdentity
 					}
 				} else {
 					return nil, err
 				}
 
-				err = tx.Where(authInfo).FirstOrCreate(authIdentity).Error
-				return currentUser, err
+				if err = tx.Where(authInfo).FirstOrCreate(authIdentity).Error; err == nil {
+					claims := auth.Claims{}
+					claims.Provider = authInfo.Provider
+					claims.Id = authInfo.UID
+					return &claims, err
+				}
+				return nil, err
 			}
 
 			return nil, err
