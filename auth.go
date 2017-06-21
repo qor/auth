@@ -35,7 +35,7 @@ type Config struct {
 
 // Storer storer interface
 type Storer interface {
-	Save(schema Schema, context *Context) (user interface{}, userID string, err error)
+	Save(schema *Schema, context *Context) (user interface{}, userID string, err error)
 	Get(userID string, context *Context) (user interface{}, err error)
 }
 
@@ -77,6 +77,10 @@ func New(config *Config) *Auth {
 
 	if config.LogoutHandler == nil {
 		config.LogoutHandler = DefaultLogoutHandler
+	}
+
+	if config.UserStorer == nil {
+		config.UserStorer = &UserStorer{}
 	}
 
 	config.Render.RegisterViewPath("github.com/qor/auth/views")

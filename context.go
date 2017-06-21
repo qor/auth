@@ -4,7 +4,7 @@ import "net/http"
 
 // Context context
 type Context struct {
-	Auth     *Auth
+	*Auth
 	Claims   *Claims
 	Provider Provider
 	Request  *http.Request

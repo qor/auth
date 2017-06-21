@@ -62,6 +62,7 @@ func New(config *Config) *GithubProvider {
 		config.AuthorizeHandler = func(context *auth.Context) (interface{}, error) {
 			var (
 				currentUser  interface{}
+				schema       auth.Schema
 				authInfo     auth_identity.Basic
 				authIdentity = reflect.New(utils.ModelType(context.Auth.Config.AuthIdentityModel)).Interface()
 				req          = context.Request
@@ -94,25 +95,29 @@ func New(config *Config) *GithubProvider {
 					return nil, err
 				}
 
+				{
+					schema.Provider = provider.GetName()
+					schema.UID = fmt.Sprint(*user.ID)
+					schema.Info.Name = user.GetName()
+					schema.Info.Email = user.GetEmail()
+					schema.Info.Image = user.GetAvatarURL()
+					schema.RawInfo = user
+				}
+
 				authInfo.Provider = provider.GetName()
 				authInfo.UID = fmt.Sprint(*user.ID)
 
 				if !tx.Model(authIdentity).Where(authInfo).Scan(&authInfo).RecordNotFound() {
-					if context.Auth.Config.UserModel != nil {
-						if authInfo.UserID == "" {
-							return nil, auth.ErrInvalidAccount
-						}
-						currentUser := reflect.New(utils.ModelType(context.Auth.Config.UserModel)).Interface()
-						err := tx.First(currentUser, authInfo.UserID).Error
-						return currentUser, err
+					if authInfo.UserID != "" {
+						return context.Auth.UserStorer.Get(authInfo.UserID, context)
 					}
+
 					return authInfo, nil
 				}
 
 				if context.Auth.Config.UserModel != nil {
-					currentUser = reflect.New(utils.ModelType(context.Auth.Config.UserModel)).Interface()
-					if err = tx.Create(currentUser).Error; err == nil {
-						authInfo.UserID = fmt.Sprint(tx.NewScope(currentUser).PrimaryKeyValue())
+					if _, userID, err := context.Auth.UserStorer.Save(&schema, context); err == nil {
+						authInfo.UserID = userID
 					} else {
 						return nil, err
 					}
