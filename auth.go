@@ -33,12 +33,6 @@ type Config struct {
 	LogoutHandler   func(*Context)
 }
 
-// Storer storer interface
-type Storer interface {
-	Save(schema *Schema, context *Context) (user interface{}, userID string, err error)
-	Get(userID string, context *Context) (user interface{}, err error)
-}
-
 // New initialize Auth
 func New(config *Config) *Auth {
 	if config == nil {

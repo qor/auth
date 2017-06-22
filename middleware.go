@@ -12,22 +12,24 @@ import (
 const CurrentUser string = "CurrentUser"
 
 // GetCurrentUser get current user from request
-func (auth *Auth) GetCurrentUser(w http.ResponseWriter, r *http.Request) interface{} {
+func (auth *Auth) GetCurrentUser(w http.ResponseWriter, req *http.Request) interface{} {
 	var (
 		currentUser interface{}
-		tokenString = r.Header.Get("Authorization")
+		tokenString = req.Header.Get("Authorization")
 	)
 
 	// Get Token from Cookie
 	if tokenString == "" {
-		if cookie, err := r.Cookie(auth.Config.SessionName); err == nil {
+		if cookie, err := req.Cookie(auth.Config.SessionName); err == nil {
 			tokenString = cookie.Value
 		}
 	}
 
 	claims, err := auth.Validate(tokenString)
 	if err == nil {
-		tx := auth.GetDB(r)
+		context := &Context{Auth: auth, Claims: claims, Request: req, Writer: w}
+		auth.UserStorer.Get(claims, context)
+		tx := auth.GetDB(req)
 
 		if auth.UserModel != nil {
 			user := reflect.New(utils.ModelType(auth.Config.UserModel)).Interface()
@@ -47,23 +49,23 @@ func (auth *Auth) GetCurrentUser(w http.ResponseWriter, r *http.Request) interfa
 
 // Restrict restrict middleware
 func (auth *Auth) Restrict(h http.Handler, permission *roles.Permission) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		// Get Token from Header
 		var (
 			hasPermission bool
 			matchedRoles  []string
-			currentUser   = auth.GetCurrentUser(w, r)
+			currentUser   = auth.GetCurrentUser(w, req)
 		)
 
 		// get current user
 		if currentUser != nil {
-			r.WithContext(context.WithValue(r.Context(), CurrentUser, currentUser))
+			req.WithContext(context.WithValue(req.Context(), CurrentUser, currentUser))
 		}
 
 		// get current user roles
-		matchedRoles = permission.Role.MatchedRoles(r, currentUser)
+		matchedRoles = permission.Role.MatchedRoles(req, currentUser)
 
-		switch r.Method {
+		switch req.Method {
 		case "GET":
 			hasPermission = permission.HasPermission(roles.Read, matchedRoles...)
 		case "PUT":
@@ -75,9 +77,9 @@ func (auth *Auth) Restrict(h http.Handler, permission *roles.Permission) http.Ha
 		}
 
 		if hasPermission {
-			h.ServeHTTP(w, r)
+			h.ServeHTTP(w, req)
 		} else {
-			http.Redirect(w, r, auth.AuthURL("login"), http.StatusSeeOther)
+			http.Redirect(w, req, auth.AuthURL("login"), http.StatusSeeOther)
 		}
 	})
 }
