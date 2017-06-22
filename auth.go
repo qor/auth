@@ -13,11 +13,13 @@ import (
 	"github.com/qor/render"
 )
 
+// Auth auth struct
 type Auth struct {
 	*Config
 	providers []Provider
 }
 
+// Config auth config
 type Config struct {
 	DB                *gorm.DB
 	SessionName       string
@@ -85,7 +87,7 @@ func New(config *Config) *Auth {
 	return auth
 }
 
-// GetDB get db
+// GetDB get db from request
 func (auth *Auth) GetDB(request *http.Request) *gorm.DB {
 	db := request.Context().Value("DB")
 	if tx, ok := db.(*gorm.DB); ok {

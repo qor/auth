@@ -7,10 +7,17 @@ import (
 	"github.com/qor/roles"
 )
 
-const CurrentUser string = "CurrentUser"
+type contextKey string
+
+// CurrentUser context key to get current user from Request
+const CurrentUser contextKey = "CurrentUser"
 
 // GetCurrentUser get current user from request
 func (auth *Auth) GetCurrentUser(w http.ResponseWriter, req *http.Request) interface{} {
+	if currentUser := req.Context().Value(CurrentUser); currentUser != nil {
+		return currentUser
+	}
+
 	tokenString := req.Header.Get("Authorization")
 
 	// Get Token from Cookie
