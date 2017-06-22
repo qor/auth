@@ -39,38 +39,40 @@ func (auth *Auth) GetCurrentUser(w http.ResponseWriter, req *http.Request) inter
 }
 
 // Restrict restrict middleware
-func (auth *Auth) Restrict(h http.Handler, permission *roles.Permission) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		// Get Token from Header
-		var (
-			hasPermission bool
-			matchedRoles  []string
-			currentUser   = auth.GetCurrentUser(w, req)
-		)
+func (auth *Auth) Restrict(permission *roles.Permission) func(http.Handler) http.Handler {
+	return func(handler http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			// Get Token from Header
+			var (
+				hasPermission bool
+				matchedRoles  []string
+				currentUser   = auth.GetCurrentUser(w, req)
+			)
 
-		// get current user
-		if currentUser != nil {
-			req.WithContext(context.WithValue(req.Context(), CurrentUser, currentUser))
-		}
+			// get current user
+			if currentUser != nil {
+				req.WithContext(context.WithValue(req.Context(), CurrentUser, currentUser))
+			}
 
-		// get current user roles
-		matchedRoles = permission.Role.MatchedRoles(req, currentUser)
+			// get current user roles
+			matchedRoles = permission.Role.MatchedRoles(req, currentUser)
 
-		switch req.Method {
-		case "GET":
-			hasPermission = permission.HasPermission(roles.Read, matchedRoles...)
-		case "PUT":
-			hasPermission = permission.HasPermission(roles.Update, matchedRoles...)
-		case "POST":
-			hasPermission = permission.HasPermission(roles.Create, matchedRoles...)
-		case "DELETE":
-			hasPermission = permission.HasPermission(roles.Delete, matchedRoles...)
-		}
+			switch req.Method {
+			case "GET":
+				hasPermission = permission.HasPermission(roles.Read, matchedRoles...)
+			case "PUT":
+				hasPermission = permission.HasPermission(roles.Update, matchedRoles...)
+			case "POST":
+				hasPermission = permission.HasPermission(roles.Create, matchedRoles...)
+			case "DELETE":
+				hasPermission = permission.HasPermission(roles.Delete, matchedRoles...)
+			}
 
-		if hasPermission {
-			h.ServeHTTP(w, req)
-		} else {
-			http.Redirect(w, req, auth.AuthURL("login"), http.StatusSeeOther)
-		}
-	})
+			if hasPermission {
+				handler.ServeHTTP(w, req)
+			} else {
+				http.Redirect(w, req, auth.AuthURL("login"), http.StatusSeeOther)
+			}
+		})
+	}
 }
