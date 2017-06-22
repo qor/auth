@@ -10,6 +10,7 @@ import (
 	"github.com/google/go-github/github"
 	"github.com/qor/auth"
 	"github.com/qor/auth/auth_identity"
+	"github.com/qor/auth/claims"
 	"github.com/qor/qor/utils"
 	"golang.org/x/oauth2"
 )
@@ -32,7 +33,7 @@ type Config struct {
 	TokenURL         string
 	RedirectURL      string
 	Scopes           []string
-	AuthorizeHandler func(*auth.Context) (*auth.Claims, error)
+	AuthorizeHandler func(*auth.Context) (*claims.Claims, error)
 }
 
 func New(config *Config) *GithubProvider {
@@ -59,7 +60,7 @@ func New(config *Config) *GithubProvider {
 	}
 
 	if config.AuthorizeHandler == nil {
-		config.AuthorizeHandler = func(context *auth.Context) (*auth.Claims, error) {
+		config.AuthorizeHandler = func(context *auth.Context) (*claims.Claims, error) {
 			var (
 				schema       auth.Schema
 				authInfo     auth_identity.Basic
@@ -107,7 +108,7 @@ func New(config *Config) *GithubProvider {
 				authInfo.UID = fmt.Sprint(*user.ID)
 
 				if !tx.Model(authIdentity).Where(authInfo).Scan(&authInfo).RecordNotFound() {
-					claims := auth.Claims{}
+					claims := claims.Claims{}
 					claims.Provider = authInfo.Provider
 					claims.Id = authInfo.UID
 					return &claims, nil
@@ -122,7 +123,7 @@ func New(config *Config) *GithubProvider {
 				}
 
 				if err = tx.Where(authInfo).FirstOrCreate(authIdentity).Error; err == nil {
-					claims := auth.Claims{}
+					claims := claims.Claims{}
 					claims.Provider = authInfo.Provider
 					claims.Id = authInfo.UID
 					return &claims, err

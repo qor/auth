@@ -2,9 +2,11 @@ package database
 
 import (
 	"reflect"
+	"strings"
 
 	"github.com/qor/auth"
 	"github.com/qor/auth/auth_identity"
+	"github.com/qor/auth/claims"
 	"github.com/qor/auth/database/encryptor"
 	"github.com/qor/auth/database/encryptor/bcrypt_encryptor"
 	"github.com/qor/qor/utils"
@@ -12,8 +14,8 @@ import (
 
 type Config struct {
 	Encryptor        encryptor.Interface
-	AuthorizeHandler func(*auth.Context) (*auth.Claims, error)
-	RegisterHandler  func(*auth.Context) (*auth.Claims, error)
+	AuthorizeHandler func(*auth.Context) (*claims.Claims, error)
+	RegisterHandler  func(*auth.Context) (*claims.Claims, error)
 }
 
 // New initialize database provider
@@ -29,7 +31,7 @@ func New(config *Config) *DatabaseProvider {
 	provider := &DatabaseProvider{Config: config}
 
 	if config.AuthorizeHandler == nil {
-		config.AuthorizeHandler = func(context *auth.Context) (*auth.Claims, error) {
+		config.AuthorizeHandler = func(context *auth.Context) (*claims.Claims, error) {
 			var (
 				authInfo auth_identity.Basic
 				req      = context.Request
@@ -38,17 +40,14 @@ func New(config *Config) *DatabaseProvider {
 
 			req.ParseForm()
 			authInfo.Provider = provider.GetName()
-			authInfo.UID = req.Form.Get("login")
+			authInfo.UID = strings.TrimSpace(req.Form.Get("login"))
 
 			if tx.Model(context.Auth.AuthIdentityModel).Where(authInfo).Scan(&authInfo).RecordNotFound() {
 				return nil, auth.ErrInvalidAccount
 			}
 
-			if err := config.Encryptor.Compare(authInfo.EncryptedPassword, req.Form.Get("password")); err == nil {
-				claims := auth.Claims{}
-				claims.Provider = authInfo.Provider
-				claims.Id = authInfo.UID
-				return &claims, err
+			if err := config.Encryptor.Compare(authInfo.EncryptedPassword, strings.TrimSpace(req.Form.Get("password"))); err == nil {
+				return authInfo.ToClaims(), err
 			}
 
 			return nil, auth.ErrInvalidPassword
@@ -56,7 +55,7 @@ func New(config *Config) *DatabaseProvider {
 	}
 
 	if config.RegisterHandler == nil {
-		config.RegisterHandler = func(context *auth.Context) (*auth.Claims, error) {
+		config.RegisterHandler = func(context *auth.Context) (*claims.Claims, error) {
 			var (
 				err          error
 				schema       auth.Schema
@@ -75,32 +74,30 @@ func New(config *Config) *DatabaseProvider {
 				return nil, auth.ErrInvalidPassword
 			}
 
-			authInfo.Provider = provider.GetName()
-			authInfo.UID = request.Form.Get("login")
-
 			{
-				schema.Provider = authInfo.Provider
-				schema.UID = authInfo.UID
-				schema.Email = authInfo.UID
+				schema.Provider = provider.GetName()
+				schema.UID = strings.TrimSpace(request.Form.Get("login"))
+				schema.Email = strings.TrimSpace(request.Form.Get("login"))
 				schema.RawInfo = request
 			}
+
+			authInfo.Provider = schema.Provider
+			authInfo.UID = schema.UID
 
 			if !tx.Model(context.Auth.AuthIdentityModel).Where(authInfo).Scan(&authInfo).RecordNotFound() {
 				return nil, auth.ErrInvalidAccount
 			}
 
-			if authInfo.EncryptedPassword, err = config.Encryptor.Digest(request.Form.Get("password")); err == nil {
+			if authInfo.EncryptedPassword, err = config.Encryptor.Digest(strings.TrimSpace(request.Form.Get("password"))); err == nil {
 				if _, userID, err := context.Auth.UserStorer.Save(&schema, context); err == nil {
 					authInfo.UserID = userID
 				} else {
 					return nil, err
 				}
 
+				// create auth identity
 				if err = tx.Where(authInfo).FirstOrCreate(authIdentity).Error; err == nil {
-					claims := auth.Claims{}
-					claims.Provider = authInfo.Provider
-					claims.Id = authInfo.UID
-					return &claims, err
+					return authInfo.ToClaims(), err
 				}
 			}
 

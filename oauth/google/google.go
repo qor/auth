@@ -11,6 +11,7 @@ import (
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/qor/auth"
 	"github.com/qor/auth/auth_identity"
+	"github.com/qor/auth/claims"
 	"github.com/qor/qor/utils"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
@@ -31,7 +32,7 @@ type Config struct {
 	TokenURL         string
 	RedirectURL      string
 	Scopes           []string
-	AuthorizeHandler func(context *auth.Context) (*auth.Claims, error)
+	AuthorizeHandler func(context *auth.Context) (*claims.Claims, error)
 }
 
 func New(config *Config) *GoogleProvider {
@@ -62,7 +63,7 @@ func New(config *Config) *GoogleProvider {
 	}
 
 	if config.AuthorizeHandler == nil {
-		config.AuthorizeHandler = func(context *auth.Context) (*auth.Claims, error) {
+		config.AuthorizeHandler = func(context *auth.Context) (*claims.Claims, error) {
 			var (
 				req          = context.Request
 				schema       auth.Schema
@@ -116,7 +117,7 @@ func New(config *Config) *GoogleProvider {
 				authInfo.UID = schema.UID
 
 				if !tx.Model(authIdentity).Where(authInfo).Scan(&authInfo).RecordNotFound() {
-					claims := auth.Claims{}
+					claims := claims.Claims{}
 					claims.Provider = authInfo.Provider
 					claims.Id = authInfo.UID
 					return &claims, nil
@@ -131,7 +132,7 @@ func New(config *Config) *GoogleProvider {
 				}
 
 				if err = tx.Where(authInfo).FirstOrCreate(authIdentity).Error; err == nil {
-					claims := auth.Claims{}
+					claims := claims.Claims{}
 					claims.Provider = authInfo.Provider
 					claims.Id = authInfo.UID
 					return &claims, err

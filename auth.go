@@ -9,6 +9,7 @@ import (
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/jinzhu/gorm"
 	"github.com/qor/auth/auth_identity"
+	"github.com/qor/auth/claims"
 	"github.com/qor/render"
 )
 
@@ -28,8 +29,8 @@ type Config struct {
 	AuthIdentityModel interface{}
 	UserStorer        Storer
 
-	LoginHandler    func(*Context, func(*Context) (*Claims, error))
-	RegisterHandler func(*Context, func(*Context) (*Claims, error))
+	LoginHandler    func(*Context, func(*Context) (*claims.Claims, error))
+	RegisterHandler func(*Context, func(*Context) (*claims.Claims, error))
 	LogoutHandler   func(*Context)
 }
 
@@ -125,7 +126,7 @@ func (auth *Auth) GetProvider(name string) Provider {
 }
 
 // SignedToken generate signed token with Claims
-func (auth *Auth) SignedToken(claims *Claims) string {
+func (auth *Auth) SignedToken(claims *claims.Claims) string {
 	// TODO
 	// update based on configuration claims.ExpiresAt
 
@@ -136,8 +137,8 @@ func (auth *Auth) SignedToken(claims *Claims) string {
 }
 
 // Validate validate auth token
-func (auth *Auth) Validate(tokenString string) (*Claims, error) {
-	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
+func (auth *Auth) Validate(tokenString string) (*claims.Claims, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &claims.Claims{}, func(token *jwt.Token) (interface{}, error) {
 		if token.Method != auth.Config.SigningMethod {
 			return nil, fmt.Errorf("unexpected signing method")
 		}
@@ -148,7 +149,7 @@ func (auth *Auth) Validate(tokenString string) (*Claims, error) {
 		return nil, err
 	}
 
-	if claims, ok := token.Claims.(*Claims); ok && token.Valid {
+	if claims, ok := token.Claims.(*claims.Claims); ok && token.Valid {
 		return claims, nil
 	}
 	return nil, errors.New("invalid token")

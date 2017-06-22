@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"path"
 	"strings"
+
+	"github.com/qor/auth/claims"
 )
 
 // NewServeMux generate http.Handler for auth
@@ -18,7 +20,7 @@ type serveMux struct {
 // ServeHTTP dispatches the handler registered in the matched route
 func (serveMux *serveMux) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	var (
-		claims  *Claims
+		claims  *claims.Claims
 		reqPath = strings.TrimPrefix(req.URL.Path, serveMux.Prefix)
 		paths   = strings.Split(reqPath, "/")
 		context = &Context{Auth: serveMux.Auth, Claims: claims, Request: req, Writer: w}

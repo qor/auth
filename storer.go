@@ -6,13 +6,14 @@ import (
 
 	"github.com/jinzhu/copier"
 	"github.com/qor/auth/auth_identity"
+	"github.com/qor/auth/claims"
 	"github.com/qor/qor/utils"
 )
 
 // Storer storer interface
 type Storer interface {
-	Create(schema *Schema, context *Context) (user interface{}, userID string, err error)
-	Get(claims *Claims, context *Context) (user interface{}, err error)
+	Save(schema *Schema, context *Context) (user interface{}, userID string, err error)
+	Get(claims *claims.Claims, context *Context) (user interface{}, err error)
 }
 
 // UserStorer default user storer
@@ -20,42 +21,20 @@ type UserStorer struct {
 }
 
 // Save defined how to save user
-func (UserStorer) Create(schema *Schema, context *Context) (user interface{}, userID string, err error) {
-	var (
-		currentUser  interface{}
-		authInfo     auth_identity.Basic
-		authIdentity = reflect.New(utils.ModelType(context.Auth.Config.AuthIdentityModel)).Interface()
-		tx           = context.Auth.GetDB(context.Request)
-	)
-
-	authInfo.Provider = schema.Provider
-	authInfo.UID = schema.UID
-
-	if !tx.Model(context.Auth.AuthIdentityModel).Where(authInfo).Scan(&authInfo).RecordNotFound() {
-		return nil, "", ErrInvalidAccount
-	}
+func (UserStorer) Save(schema *Schema, context *Context) (user interface{}, userID string, err error) {
+	var tx = context.Auth.GetDB(context.Request)
 
 	if context.Auth.Config.UserModel != nil {
-		currentUser = reflect.New(utils.ModelType(context.Auth.Config.UserModel)).Interface()
+		currentUser := reflect.New(utils.ModelType(context.Auth.Config.UserModel)).Interface()
 		copier.Copy(currentUser, schema)
-		if err = tx.Create(currentUser).Error; err == nil {
-			authInfo.UserID = fmt.Sprint(tx.NewScope(currentUser).PrimaryKeyValue())
-		} else {
-			return nil, "", err
-		}
-	} else {
-		currentUser = authIdentity
+		err = tx.Create(currentUser).Error
+		return currentUser, fmt.Sprint(tx.NewScope(currentUser).PrimaryKeyValue()), err
 	}
-
-	err = tx.Where(authInfo).FirstOrCreate(authIdentity).Error
-	if err == nil {
-		return currentUser, authInfo.UserID, nil
-	}
-	return nil, "", err
+	return nil, "", nil
 }
 
 // Get defined how to get user with user id
-func (UserStorer) Get(claims *Claims, context *Context) (user interface{}, err error) {
+func (UserStorer) Get(claims *claims.Claims, context *Context) (user interface{}, err error) {
 	var tx = context.Auth.GetDB(context.Request)
 
 	if context.Auth.Config.UserModel != nil {

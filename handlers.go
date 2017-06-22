@@ -3,12 +3,13 @@ package auth
 import (
 	"net/http"
 
+	"github.com/qor/auth/claims"
 	"github.com/qor/qor"
 	"github.com/qor/qor/utils"
 	"github.com/qor/responder"
 )
 
-func respondAfterLogged(claims *Claims, context *Context) {
+func respondAfterLogged(claims *claims.Claims, context *Context) {
 	token := context.Auth.SignedToken(claims)
 	qorContext := &qor.Context{
 		Request: context.Request,
@@ -30,7 +31,7 @@ func respondAfterLogged(claims *Claims, context *Context) {
 }
 
 // DefaultLoginHandler default login behaviour
-var DefaultLoginHandler = func(context *Context, authorize func(*Context) (*Claims, error)) {
+var DefaultLoginHandler = func(context *Context, authorize func(*Context) (*claims.Claims, error)) {
 	var (
 		req         = context.Request
 		w           = context.Writer
@@ -51,7 +52,7 @@ var DefaultLoginHandler = func(context *Context, authorize func(*Context) (*Clai
 }
 
 // DefaultRegisterHandler default register behaviour
-var DefaultRegisterHandler = func(context *Context, register func(*Context) (*Claims, error)) {
+var DefaultRegisterHandler = func(context *Context, register func(*Context) (*claims.Claims, error)) {
 	var (
 		req         = context.Request
 		w           = context.Writer
