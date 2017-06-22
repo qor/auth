@@ -117,10 +117,7 @@ func New(config *Config) *GoogleProvider {
 				authInfo.UID = schema.UID
 
 				if !tx.Model(authIdentity).Where(authInfo).Scan(&authInfo).RecordNotFound() {
-					claims := claims.Claims{}
-					claims.Provider = authInfo.Provider
-					claims.Id = authInfo.UID
-					return &claims, nil
+					return authInfo.ToClaims(), nil
 				}
 
 				if _, userID, err := context.Auth.UserStorer.Save(&schema, context); err == nil {
@@ -132,10 +129,7 @@ func New(config *Config) *GoogleProvider {
 				}
 
 				if err = tx.Where(authInfo).FirstOrCreate(authIdentity).Error; err == nil {
-					claims := claims.Claims{}
-					claims.Provider = authInfo.Provider
-					claims.Id = authInfo.UID
-					return &claims, err
+					return authInfo.ToClaims(), nil
 				}
 			}
 

@@ -57,38 +57,35 @@ func New(config *Config) *DatabaseProvider {
 	if config.RegisterHandler == nil {
 		config.RegisterHandler = func(context *auth.Context) (*claims.Claims, error) {
 			var (
-				err          error
-				schema       auth.Schema
-				authInfo     auth_identity.Basic
-				request      = context.Request
-				tx           = context.Auth.GetDB(request)
-				authIdentity = reflect.New(utils.ModelType(context.Auth.Config.AuthIdentityModel)).Interface()
+				err      error
+				schema   auth.Schema
+				authInfo auth_identity.Basic
+				req      = context.Request
+				tx       = context.Auth.GetDB(req)
 			)
 
-			request.ParseForm()
-			if request.Form.Get("login") == "" {
+			req.ParseForm()
+			if req.Form.Get("login") == "" {
 				return nil, auth.ErrInvalidAccount
 			}
 
-			if request.Form.Get("password") == "" {
+			if req.Form.Get("password") == "" {
 				return nil, auth.ErrInvalidPassword
 			}
 
-			{
-				schema.Provider = provider.GetName()
-				schema.UID = strings.TrimSpace(request.Form.Get("login"))
-				schema.Email = strings.TrimSpace(request.Form.Get("login"))
-				schema.RawInfo = request
-			}
-
-			authInfo.Provider = schema.Provider
-			authInfo.UID = schema.UID
+			authInfo.Provider = provider.GetName()
+			authInfo.UID = strings.TrimSpace(req.Form.Get("login"))
 
 			if !tx.Model(context.Auth.AuthIdentityModel).Where(authInfo).Scan(&authInfo).RecordNotFound() {
 				return nil, auth.ErrInvalidAccount
 			}
 
-			if authInfo.EncryptedPassword, err = config.Encryptor.Digest(strings.TrimSpace(request.Form.Get("password"))); err == nil {
+			if authInfo.EncryptedPassword, err = config.Encryptor.Digest(strings.TrimSpace(req.Form.Get("password"))); err == nil {
+				schema.Provider = authInfo.Provider
+				schema.UID = authInfo.UID
+				schema.Email = authInfo.UID
+				schema.RawInfo = req
+
 				if _, userID, err := context.Auth.UserStorer.Save(&schema, context); err == nil {
 					authInfo.UserID = userID
 				} else {
@@ -96,6 +93,7 @@ func New(config *Config) *DatabaseProvider {
 				}
 
 				// create auth identity
+				authIdentity := reflect.New(utils.ModelType(context.Auth.Config.AuthIdentityModel)).Interface()
 				if err = tx.Where(authInfo).FirstOrCreate(authIdentity).Error; err == nil {
 					return authInfo.ToClaims(), err
 				}

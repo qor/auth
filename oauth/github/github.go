@@ -95,6 +95,13 @@ func New(config *Config) *GithubProvider {
 					return nil, err
 				}
 
+				authInfo.Provider = provider.GetName()
+				authInfo.UID = fmt.Sprint(*user.ID)
+
+				if !tx.Model(authIdentity).Where(authInfo).Scan(&authInfo).RecordNotFound() {
+					return authInfo.ToClaims(), nil
+				}
+
 				{
 					schema.Provider = provider.GetName()
 					schema.UID = fmt.Sprint(*user.ID)
@@ -103,17 +110,6 @@ func New(config *Config) *GithubProvider {
 					schema.Image = user.GetAvatarURL()
 					schema.RawInfo = user
 				}
-
-				authInfo.Provider = provider.GetName()
-				authInfo.UID = fmt.Sprint(*user.ID)
-
-				if !tx.Model(authIdentity).Where(authInfo).Scan(&authInfo).RecordNotFound() {
-					claims := claims.Claims{}
-					claims.Provider = authInfo.Provider
-					claims.Id = authInfo.UID
-					return &claims, nil
-				}
-
 				if _, userID, err := context.Auth.UserStorer.Save(&schema, context); err == nil {
 					if userID != "" {
 						authInfo.UserID = userID
@@ -123,10 +119,7 @@ func New(config *Config) *GithubProvider {
 				}
 
 				if err = tx.Where(authInfo).FirstOrCreate(authIdentity).Error; err == nil {
-					claims := claims.Claims{}
-					claims.Provider = authInfo.Provider
-					claims.Id = authInfo.UID
-					return &claims, err
+					return authInfo.ToClaims(), nil
 				}
 				return nil, err
 			}
