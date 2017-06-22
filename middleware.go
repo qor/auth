@@ -3,9 +3,7 @@ package auth
 import (
 	"context"
 	"net/http"
-	"reflect"
 
-	"github.com/qor/qor/utils"
 	"github.com/qor/roles"
 )
 
@@ -13,10 +11,7 @@ const CurrentUser string = "CurrentUser"
 
 // GetCurrentUser get current user from request
 func (auth *Auth) GetCurrentUser(w http.ResponseWriter, req *http.Request) interface{} {
-	var (
-		currentUser interface{}
-		tokenString = req.Header.Get("Authorization")
-	)
+	tokenString := req.Header.Get("Authorization")
 
 	// Get Token from Cookie
 	if tokenString == "" {
@@ -28,23 +23,12 @@ func (auth *Auth) GetCurrentUser(w http.ResponseWriter, req *http.Request) inter
 	claims, err := auth.Validate(tokenString)
 	if err == nil {
 		context := &Context{Auth: auth, Claims: claims, Request: req, Writer: w}
-		auth.UserStorer.Get(claims, context)
-		tx := auth.GetDB(req)
-
-		if auth.UserModel != nil {
-			user := reflect.New(utils.ModelType(auth.Config.UserModel)).Interface()
-			if err := tx.First(user, claims.Id).Error; err == nil {
-				currentUser = user
-			}
-		} else if auth.Config.AuthIdentityModel != nil {
-			user := reflect.New(utils.ModelType(auth.Config.AuthIdentityModel)).Interface()
-			if err := tx.First(user, claims.Id).Error; err == nil {
-				currentUser = user
-			}
+		if user, err := auth.UserStorer.Get(claims, context); err == nil {
+			return user
 		}
 	}
 
-	return currentUser
+	return nil
 }
 
 // Restrict restrict middleware
