@@ -57,7 +57,7 @@ func New(config *Config) *Auth {
 	}
 
 	if config.SessionName == "" {
-		config.SessionName = "_session"
+		config.SessionName = "_auth_session"
 	}
 
 	if config.AuthIdentityModel == nil {

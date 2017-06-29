@@ -4,23 +4,15 @@ import (
 	"net/http"
 
 	"github.com/qor/auth/claims"
-	"github.com/qor/qor"
-	"github.com/qor/qor/utils"
 	"github.com/qor/responder"
+	"github.com/qor/session/manager"
 )
 
 func respondAfterLogged(claims *claims.Claims, context *Context) {
 	token := context.Auth.SignedToken(claims)
-	qorContext := &qor.Context{
-		Request: context.Request,
-		Writer:  context.Writer,
-	}
 
-	// TODO set expired at
-	utils.SetCookie(http.Cookie{
-		Name:  context.Auth.Config.SessionName,
-		Value: token,
-	}, qorContext)
+	// Set auth session
+	manager.SessionManager.Add(context.Request, context.Auth.Config.SessionName, token)
 
 	responder.With("html", func() {
 		// write cookie
@@ -73,11 +65,8 @@ var DefaultRegisterHandler = func(context *Context, register func(*Context) (*cl
 
 // DefaultLogoutHandler default logout behaviour
 var DefaultLogoutHandler = func(context *Context) {
-	qorContext := &qor.Context{
-		Request: context.Request,
-		Writer:  context.Writer,
-	}
+	// Clear auth session
+	manager.SessionManager.Pop(context.Request, context.Auth.Config.SessionName)
 
-	utils.SetCookie(http.Cookie{Name: context.Auth.Config.SessionName, Value: ""}, qorContext)
 	http.Redirect(context.Writer, context.Request, "/", http.StatusSeeOther)
 }
