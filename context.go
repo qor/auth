@@ -20,3 +20,8 @@ type Context struct {
 func (context Context) Flashes() []session.Message {
 	return context.SessionManager.Flashes(context.Request)
 }
+
+// FormValue get form value with name
+func (context Context) FormValue(name string) string {
+	return context.Request.Form.Get(name)
+}
