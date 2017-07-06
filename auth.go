@@ -11,6 +11,8 @@ import (
 	"github.com/qor/auth/auth_identity"
 	"github.com/qor/auth/claims"
 	"github.com/qor/render"
+	"github.com/qor/session"
+	"github.com/qor/session/manager"
 )
 
 // Auth auth struct
@@ -30,6 +32,7 @@ type Config struct {
 	UserModel         interface{}
 	AuthIdentityModel interface{}
 	UserStorer        Storer
+	SessionManager    session.ManagerInterface
 
 	LoginHandler    func(*Context, func(*Context) (*claims.Claims, error))
 	RegisterHandler func(*Context, func(*Context) (*claims.Claims, error))
@@ -78,6 +81,10 @@ func New(config *Config) *Auth {
 
 	if config.UserStorer == nil {
 		config.UserStorer = &UserStorer{}
+	}
+
+	if config.SessionManager == nil {
+		config.SessionManager = manager.SessionManager
 	}
 
 	config.Render.RegisterViewPath("github.com/qor/auth/views")

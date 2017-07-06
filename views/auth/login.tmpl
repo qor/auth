@@ -1,6 +1,15 @@
 <div style="margin:auto; text-align: center;">
   <h2>Log in</h2>
 
+  {{$flashes := .Flashes}}
+  {{if $flashes}}
+    <ul>
+      {{range $flash := $flashes}}
+        <li>{{$flash.Message}}</li>
+      {{end}}
+    </ul>
+  {{end}}
+
   <div>
     <div>
       {{range $provider := .Result.GetProviders}}

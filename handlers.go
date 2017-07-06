@@ -5,14 +5,14 @@ import (
 
 	"github.com/qor/auth/claims"
 	"github.com/qor/responder"
-	"github.com/qor/session/manager"
+	"github.com/qor/session"
 )
 
 func respondAfterLogged(claims *claims.Claims, context *Context) {
 	token := context.Auth.SignedToken(claims)
 
 	// Set auth session
-	manager.SessionManager.Add(context.Request, context.Auth.Config.SessionName, token)
+	context.SessionManager.Add(context.Request, context.Auth.Config.SessionName, token)
 
 	responder.With("html", func() {
 		// write cookie
@@ -31,12 +31,16 @@ var DefaultLoginHandler = func(context *Context, authorize func(*Context) (*clai
 	)
 
 	if err == nil && claims != nil {
+		context.SessionManager.Flash(req, session.Message{Message: "logged"})
 		respondAfterLogged(claims, context)
 		return
 	}
 
+	context.SessionManager.Flash(req, session.Message{Message: err.Error(), Type: "error"})
+
 	// error handling
 	responder.With("html", func() {
+		context.SessionManager.Flash(req, session.Message{Message: "failed to login"})
 		context.Auth.Config.Render.Execute("auth/login", context, req, w)
 	}).With([]string{"json"}, func() {
 		// write json error
@@ -56,6 +60,9 @@ var DefaultRegisterHandler = func(context *Context, register func(*Context) (*cl
 		return
 	}
 
+	context.SessionManager.Flash(req, session.Message{Message: err.Error(), Type: "error"})
+
+	// error handling
 	responder.With("html", func() {
 		context.Auth.Config.Render.Execute("auth/register", context, req, w)
 	}).With([]string{"json"}, func() {
@@ -66,7 +73,7 @@ var DefaultRegisterHandler = func(context *Context, register func(*Context) (*cl
 // DefaultLogoutHandler default logout behaviour
 var DefaultLogoutHandler = func(context *Context) {
 	// Clear auth session
-	manager.SessionManager.Pop(context.Request, context.Auth.Config.SessionName)
+	context.SessionManager.Pop(context.Request, context.Auth.Config.SessionName)
 
 	http.Redirect(context.Writer, context.Request, "/", http.StatusSeeOther)
 }

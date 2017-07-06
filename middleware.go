@@ -6,7 +6,6 @@ import (
 
 	"github.com/qor/qor/utils"
 	"github.com/qor/roles"
-	"github.com/qor/session/manager"
 )
 
 // CurrentUser context key to get current user from Request
@@ -22,7 +21,7 @@ func (auth *Auth) GetCurrentUser(w http.ResponseWriter, req *http.Request) inter
 
 	// Get Token from Cookie
 	if tokenString == "" {
-		tokenString = manager.SessionManager.Get(req, auth.Config.SessionName)
+		tokenString = auth.SessionManager.Get(req, auth.Config.SessionName)
 	}
 
 	claims, err := auth.Validate(tokenString)

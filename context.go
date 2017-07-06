@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/qor/auth/claims"
+	"github.com/qor/session"
 )
 
 // Context context
@@ -13,4 +14,9 @@ type Context struct {
 	Provider Provider
 	Request  *http.Request
 	Writer   http.ResponseWriter
+}
+
+// Flashes get flash messages
+func (context Context) Flashes() []session.Message {
+	return context.SessionManager.Flashes(context.Request)
 }
