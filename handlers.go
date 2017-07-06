@@ -40,11 +40,10 @@ var DefaultLoginHandler = func(context *Context, authorize func(*Context) (*clai
 
 	// error handling
 	responder.With("html", func() {
-		context.SessionManager.Flash(req, session.Message{Message: "failed to login"})
 		context.Auth.Config.Render.Execute("auth/login", context, req, w)
 	}).With([]string{"json"}, func() {
 		// write json error
-	})
+	}).Respond(context.Request)
 }
 
 // DefaultRegisterHandler default register behaviour
@@ -67,7 +66,7 @@ var DefaultRegisterHandler = func(context *Context, register func(*Context) (*cl
 		context.Auth.Config.Render.Execute("auth/register", context, req, w)
 	}).With([]string{"json"}, func() {
 		// write json error
-	})
+	}).Respond(context.Request)
 }
 
 // DefaultLogoutHandler default logout behaviour
