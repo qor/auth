@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/jinzhu/gorm"
@@ -34,6 +35,11 @@ type Config struct {
 	UserStorer        Storer
 	SessionManager    session.ManagerInterface
 	ViewPaths         []string
+
+	// The time you want the user will be remembered without asking for credentials.
+	// After this time the user will be blocked and will have to enter their credentials again.
+	// By default remember_for is 2.weeks.
+	RememberFor time.Duration
 
 	LoginHandler    func(*Context, func(*Context) (*claims.Claims, error))
 	RegisterHandler func(*Context, func(*Context) (*claims.Claims, error))
@@ -86,6 +92,10 @@ func New(config *Config) *Auth {
 
 	if config.SessionManager == nil {
 		config.SessionManager = manager.SessionManager
+	}
+
+	if config.RememberFor == 0 {
+		config.RememberFor = time.Hour * 24 * 14 // 2 weeks
 	}
 
 	for _, viewPath := range config.ViewPaths {
@@ -141,8 +151,8 @@ func (auth *Auth) GetProvider(name string) Provider {
 
 // SignedToken generate signed token with Claims
 func (auth *Auth) SignedToken(claims *claims.Claims) string {
-	// TODO
-	// update based on configuration claims.ExpiresAt
+	// Apply remember for
+	claims.ExpiresAt = time.Now().Add(auth.Config.RememberFor).Unix()
 
 	token := jwt.NewWithClaims(auth.SigningMethod, claims)
 	signedToken, _ := token.SignedString([]byte(auth.SignedString))
