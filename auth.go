@@ -33,6 +33,7 @@ type Config struct {
 	AuthIdentityModel interface{}
 	UserStorer        Storer
 	SessionManager    session.ManagerInterface
+	ViewPaths         []string
 
 	LoginHandler    func(*Context, func(*Context) (*claims.Claims, error))
 	RegisterHandler func(*Context, func(*Context) (*claims.Claims, error))
@@ -85,6 +86,10 @@ func New(config *Config) *Auth {
 
 	if config.SessionManager == nil {
 		config.SessionManager = manager.SessionManager
+	}
+
+	for _, viewPath := range config.ViewPaths {
+		config.Render.RegisterViewPath(viewPath)
 	}
 
 	config.Render.RegisterViewPath("github.com/qor/auth/views")
