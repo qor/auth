@@ -1,6 +1,8 @@
 package database
 
 import (
+	"strings"
+
 	"github.com/qor/auth"
 	"github.com/qor/auth/claims"
 	"github.com/qor/auth/database/encryptor"
@@ -9,6 +11,7 @@ import (
 
 // Config database config
 type Config struct {
+	Confirmable      bool
 	Encryptor        encryptor.Interface
 	AuthorizeHandler func(*auth.Context) (*claims.Claims, error)
 	RegisterHandler  func(*auth.Context) (*claims.Claims, error)
@@ -68,4 +71,18 @@ func (provider Provider) Callback(context *auth.Context) {
 
 // ServeHTTP implement ServeHTTP with database provider
 func (provider Provider) ServeHTTP(context *auth.Context) {
+	var (
+		req     = context.Request
+		reqPath = strings.TrimPrefix(req.URL.Path, context.Auth.Prefix)
+		paths   = strings.Split(reqPath, "/")
+	)
+
+	if len(paths) >= 2 {
+		// eg: /database/confirm
+		switch paths[1] {
+		case "confirm":
+			// TODO parse code & confirm account
+		}
+		return
+	}
 }

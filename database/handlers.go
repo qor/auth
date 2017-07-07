@@ -27,6 +27,10 @@ var DefaultAuthorizeHandler = func(context *auth.Context) (*claims.Claims, error
 		return nil, auth.ErrInvalidAccount
 	}
 
+	if provider.Config.Confirmable && authInfo.ConfirmedAt == nil {
+		return nil, auth.ErrUnconfirmed
+	}
+
 	if err := provider.Encryptor.Compare(authInfo.EncryptedPassword, strings.TrimSpace(req.Form.Get("password"))); err == nil {
 		return authInfo.ToClaims(), err
 	}
@@ -76,6 +80,10 @@ var DefaultRegisterHandler = func(context *auth.Context) (*claims.Claims, error)
 		// create auth identity
 		authIdentity := reflect.New(utils.ModelType(context.Auth.Config.AuthIdentityModel)).Interface()
 		if err = tx.Where(authInfo).FirstOrCreate(authIdentity).Error; err == nil {
+			if provider.Config.Confirmable {
+				// TODO send confirmation email
+			}
+
 			return authInfo.ToClaims(), err
 		}
 	}

@@ -9,4 +9,6 @@ var (
 	ErrInvalidAccount = errors.New("invalid account")
 	// ErrUnauthorized unauthorized error
 	ErrUnauthorized = errors.New("Unauthorized")
+	// ErrUnconfirmed unauthorized error
+	ErrUnconfirmed = errors.New("You have to confirm your account before continuing")
 )
