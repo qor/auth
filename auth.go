@@ -11,6 +11,7 @@ import (
 	"github.com/jinzhu/gorm"
 	"github.com/qor/auth/auth_identity"
 	"github.com/qor/auth/claims"
+	"github.com/qor/qor/utils"
 	"github.com/qor/render"
 	"github.com/qor/session"
 	"github.com/qor/session/manager"
@@ -111,7 +112,7 @@ func New(config *Config) *Auth {
 
 // GetDB get db from request
 func (auth *Auth) GetDB(request *http.Request) *gorm.DB {
-	db := request.Context().Value("DB")
+	db := request.Context().Value(utils.ContextDBName)
 	if tx, ok := db.(*gorm.DB); ok {
 		return tx
 	}
