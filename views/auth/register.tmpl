@@ -12,7 +12,7 @@
 
   <div>
     <div>
-      {{range $provider := .Result.GetProviders}}
+      {{range $provider := .GetProviders}}
         <div>Register with {{$provider.GetName}}</div>
         {{render (printf "auth/register/providers/%v" $provider.GetName)}}
       {{end}}
@@ -20,6 +20,6 @@
   </div>
 
   <div>
-    <a href="{{.Result.AuthURL "login"}}">Sign in</a>
+    <a href="{{.AuthURL "login"}}">Sign in</a>
   </div>
 </div>
