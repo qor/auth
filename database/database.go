@@ -11,11 +11,12 @@ import (
 
 // Config database config
 type Config struct {
-	Confirmable      bool
-	ConfirmMailer    func(email string, context *auth.Context, currentUser interface{}) error
-	Encryptor        encryptor.Interface
-	AuthorizeHandler func(*auth.Context) (*claims.Claims, error)
-	RegisterHandler  func(*auth.Context) (*claims.Claims, error)
+	Confirmable         bool
+	ConfirmMailer       func(email string, context *auth.Context, currentUser interface{}) error
+	ResetPasswordMailer func(email string, context *auth.Context, currentUser interface{}) error
+	Encryptor           encryptor.Interface
+	AuthorizeHandler    func(*auth.Context) (*claims.Claims, error)
+	RegisterHandler     func(*auth.Context) (*claims.Claims, error)
 }
 
 // New initialize database provider
@@ -30,6 +31,10 @@ func New(config *Config) *Provider {
 
 	if config.ConfirmMailer == nil {
 		config.ConfirmMailer = DefaultConfirmationMailer
+	}
+
+	if config.ResetPasswordMailer == nil {
+		config.ResetPasswordMailer = DefaultResetPasswordMailer
 	}
 
 	provider := &Provider{Config: config}
