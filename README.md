@@ -50,3 +50,6 @@ func main() {
 * Explain how to overwrite login, register pages
 * Explain how to handle session
 * Explain how to customize handlers, write themes
+* Intergrate Mailer
+    Confirmation
+    Forgot password

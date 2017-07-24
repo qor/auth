@@ -11,6 +11,7 @@ import (
 	"github.com/jinzhu/gorm"
 	"github.com/qor/auth/auth_identity"
 	"github.com/qor/auth/claims"
+	"github.com/qor/mailer"
 	"github.com/qor/qor/utils"
 	"github.com/qor/render"
 	"github.com/qor/session"
@@ -26,9 +27,10 @@ type Auth struct {
 // Config auth config
 type Config struct {
 	DB                *gorm.DB
+	Render            *render.Render
+	Mailer            *mailer.Mailer
 	SessionName       string
 	Prefix            string
-	Render            *render.Render
 	SigningMethod     jwt.SigningMethod
 	SignedString      string
 	UserModel         interface{}
