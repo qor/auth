@@ -1,12 +1,15 @@
 package database
 
 import (
+	"html/template"
+	"net/mail"
 	"reflect"
 	"strings"
 
 	"github.com/qor/auth"
 	"github.com/qor/auth/auth_identity"
 	"github.com/qor/auth/claims"
+	"github.com/qor/mailer"
 	"github.com/qor/qor/utils"
 )
 
@@ -42,6 +45,7 @@ var DefaultAuthorizeHandler = func(context *auth.Context) (*claims.Claims, error
 var DefaultRegisterHandler = func(context *auth.Context) (*claims.Claims, error) {
 	var (
 		err         error
+		currentUser interface{}
 		schema      auth.Schema
 		authInfo    auth_identity.Basic
 		req         = context.Request
@@ -71,9 +75,8 @@ var DefaultRegisterHandler = func(context *auth.Context) (*claims.Claims, error)
 		schema.Email = authInfo.UID
 		schema.RawInfo = req
 
-		if _, userID, err := context.Auth.UserStorer.Save(&schema, context); err == nil {
-			authInfo.UserID = userID
-		} else {
+		currentUser, authInfo.UserID, err = context.Auth.UserStorer.Save(&schema, context)
+		if err != nil {
 			return nil, err
 		}
 
@@ -81,7 +84,19 @@ var DefaultRegisterHandler = func(context *auth.Context) (*claims.Claims, error)
 		authIdentity := reflect.New(utils.ModelType(context.Auth.Config.AuthIdentityModel)).Interface()
 		if err = tx.Where(authInfo).FirstOrCreate(authIdentity).Error; err == nil {
 			if provider.Config.Confirmable {
-				// TODO send confirmation email
+				context.Auth.Mailer.Send(
+					mailer.Email{
+						TO:      []mail.Address{{Address: schema.Email}},
+						Subject: "confirm",
+					}, mailer.Template{
+						Name:    "auth/confirmation",
+						Data:    context,
+						Request: context.Request,
+						Writer:  context.Writer,
+					}.Funcs(template.FuncMap{
+						"current_user": currentUser,
+					}),
+				)
 			}
 
 			return authInfo.ToClaims(), err
