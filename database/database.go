@@ -12,6 +12,7 @@ import (
 // Config database config
 type Config struct {
 	Confirmable      bool
+	ConfirmMailer    func(email string, context *auth.Context, currentUser interface{}) error
 	Encryptor        encryptor.Interface
 	AuthorizeHandler func(*auth.Context) (*claims.Claims, error)
 	RegisterHandler  func(*auth.Context) (*claims.Claims, error)
@@ -25,6 +26,10 @@ func New(config *Config) *Provider {
 
 	if config.Encryptor == nil {
 		config.Encryptor = bcrypt_encryptor.New(&bcrypt_encryptor.Config{})
+	}
+
+	if config.ConfirmMailer == nil {
+		config.ConfirmMailer = DefaultConfirmationMailer
 	}
 
 	provider := &Provider{Config: config}
