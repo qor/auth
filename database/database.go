@@ -12,8 +12,8 @@ import (
 // Config database config
 type Config struct {
 	Confirmable         bool
-	ConfirmMailer       func(email string, context *auth.Context, currentUser interface{}) error
-	ResetPasswordMailer func(email string, context *auth.Context, currentUser interface{}) error
+	ConfirmMailer       func(email string, context *auth.Context, claims *claims.Claims, currentUser interface{}) error
+	ResetPasswordMailer func(email string, context *auth.Context, claims *claims.Claims, currentUser interface{}) error
 	Encryptor           encryptor.Interface
 	AuthorizeHandler    func(*auth.Context) (*claims.Claims, error)
 	RegisterHandler     func(*auth.Context) (*claims.Claims, error)

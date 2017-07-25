@@ -81,7 +81,7 @@ var DefaultRegisterHandler = func(context *auth.Context) (*claims.Claims, error)
 		authIdentity := reflect.New(utils.ModelType(context.Auth.Config.AuthIdentityModel)).Interface()
 		if err = tx.Where(authInfo).FirstOrCreate(authIdentity).Error; err == nil {
 			if provider.Config.Confirmable {
-				err = provider.Config.ConfirmMailer(schema.Email, context, currentUser)
+				err = provider.Config.ConfirmMailer(schema.Email, context, authInfo.ToClaims(), currentUser)
 			}
 
 			return authInfo.ToClaims(), err

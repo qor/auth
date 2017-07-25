@@ -3,8 +3,10 @@ package database
 import (
 	"net/mail"
 
-	"github.com/alecthomas/template"
+	"html/template"
+
 	"github.com/qor/auth"
+	"github.com/qor/auth/claims"
 	"github.com/qor/mailer"
 )
 
@@ -12,7 +14,7 @@ import (
 var ResetPasswordMailSubject = "Reset your password"
 
 // DefaultResetPasswordMailer default reset password mailer
-var DefaultResetPasswordMailer = func(email string, context *auth.Context, currentUser interface{}) error {
+var DefaultResetPasswordMailer = func(email string, context *auth.Context, claims *claims.Claims, currentUser interface{}) error {
 	return context.Auth.Mailer.Send(
 		mailer.Email{
 			TO:      []mail.Address{{Address: email}},
