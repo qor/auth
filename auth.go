@@ -131,6 +131,7 @@ func (auth *Auth) RegisterProvider(provider Provider) {
 		}
 	}
 
+	provider.ConfigAuth(auth)
 	auth.providers = append(auth.providers, provider)
 }
 

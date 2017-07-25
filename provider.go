@@ -4,6 +4,7 @@ package auth
 type Provider interface {
 	GetName() string
 
+	ConfigAuth(*Auth)
 	Login(*Context)
 	Logout(*Context)
 	Register(*Context)

@@ -15,6 +15,10 @@ func (PhoneProvider) GetName() string {
 	return "phone"
 }
 
+// ConfigAuth config auth
+func (PhoneProvider) ConfigAuth(*auth.Auth) {
+}
+
 // Login implemented login with phone provider
 func (PhoneProvider) Login(context *auth.Context) {
 }

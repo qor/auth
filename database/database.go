@@ -61,6 +61,11 @@ func (Provider) GetName() string {
 	return "database"
 }
 
+// ConfigAuth config auth
+func (provider Provider) ConfigAuth(auth *auth.Auth) {
+	auth.Render.RegisterViewPath("github.com/qor/auth/database/views")
+}
+
 // Login implemented login with database provider
 func (provider Provider) Login(context *auth.Context) {
 	context.Auth.LoginHandler(context, provider.AuthorizeHandler)
@@ -98,11 +103,12 @@ func (provider Provider) ServeHTTP(context *auth.Context) {
 				switch paths[2] {
 				case "new":
 					context.Auth.Config.Render.Execute("auth/password/new", context, context.Request, context.Writer)
+				case "recover":
+					// provider.ResetPasswordMailer(context)
 				default:
 					return
 				}
 			}
-			provider.ResetPasswordMailer(context)
 		}
 		return
 	}
