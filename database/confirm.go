@@ -5,8 +5,11 @@ import (
 	"net/mail"
 	"net/url"
 	"path"
+	"strings"
+	"time"
 
 	"github.com/qor/auth"
+	"github.com/qor/auth/auth_identity"
 	"github.com/qor/auth/claims"
 	"github.com/qor/mailer"
 )
@@ -39,4 +42,34 @@ var DefaultConfirmationMailer = func(email string, context *auth.Context, claims
 			"confirm_url":  confirmURL.String(),
 		}),
 	)
+}
+
+// DefaultConfirmHandler default confirm handler
+var DefaultConfirmHandler = func(context *auth.Context) error {
+	var (
+		authInfo    auth_identity.Basic
+		provider, _ = context.Provider.(*Provider)
+		tx          = context.Auth.GetDB(context.Request)
+		paths       = strings.Split(context.Request.URL.Path, "/")
+		token       = paths[len(paths)-1]
+	)
+
+	claims, err := context.Auth.Validate(token)
+
+	if err == nil {
+		if err = claims.Valid(); err == nil {
+			authInfo.Provider = provider.GetName()
+			authInfo.UID = claims.Id
+
+			if tx.Model(context.Auth.AuthIdentityModel).Where(authInfo).Scan(&authInfo).RecordNotFound() {
+				return auth.ErrInvalidAccount
+			}
+
+			now := time.Now()
+			authInfo.ConfirmedAt = &now
+			return tx.Model(context.Auth.AuthIdentityModel).Save(&authInfo).Error
+		}
+	}
+
+	return err
 }

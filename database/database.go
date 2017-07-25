@@ -11,13 +11,14 @@ import (
 
 // Config database config
 type Config struct {
-	Confirmable         bool
-	ConfirmMailer       func(email string, context *auth.Context, claims *claims.Claims, currentUser interface{}) error
-	ResetPasswordMailer func(email string, context *auth.Context, claims *claims.Claims, currentUser interface{}) error
-	Encryptor           encryptor.Interface
-	AuthorizeHandler    func(*auth.Context) (*claims.Claims, error)
-	RegisterHandler     func(*auth.Context) (*claims.Claims, error)
-	ConfirmHandler      func(*auth.Context) error
+	Confirmable          bool
+	ConfirmMailer        func(email string, context *auth.Context, claims *claims.Claims, currentUser interface{}) error
+	ConfirmHandler       func(*auth.Context) error
+	ResetPasswordMailer  func(email string, context *auth.Context, claims *claims.Claims, currentUser interface{}) error
+	ResetPasswordHandler func(*auth.Context) error
+	Encryptor            encryptor.Interface
+	AuthorizeHandler     func(*auth.Context) (*claims.Claims, error)
+	RegisterHandler      func(*auth.Context) (*claims.Claims, error)
 }
 
 // New initialize database provider
@@ -30,15 +31,23 @@ func New(config *Config) *Provider {
 		config.Encryptor = bcrypt_encryptor.New(&bcrypt_encryptor.Config{})
 	}
 
+	provider := &Provider{Config: config}
+
 	if config.ConfirmMailer == nil {
 		config.ConfirmMailer = DefaultConfirmationMailer
+	}
+
+	if config.ConfirmHandler == nil {
+		config.ConfirmHandler = DefaultConfirmHandler
 	}
 
 	if config.ResetPasswordMailer == nil {
 		config.ResetPasswordMailer = DefaultResetPasswordMailer
 	}
 
-	provider := &Provider{Config: config}
+	if config.ResetPasswordHandler == nil {
+		config.ResetPasswordHandler = DefaultResetPasswordHandler
+	}
 
 	if config.AuthorizeHandler == nil {
 		config.AuthorizeHandler = DefaultAuthorizeHandler
@@ -104,7 +113,7 @@ func (provider Provider) ServeHTTP(context *auth.Context) {
 				case "new":
 					context.Auth.Config.Render.Execute("auth/password/new", context, context.Request, context.Writer)
 				case "recover":
-					// provider.ResetPasswordMailer(context)
+					provider.ResetPasswordHandler(context)
 				default:
 					return
 				}

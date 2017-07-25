@@ -4,10 +4,12 @@ import (
 	"net/mail"
 	"net/url"
 	"path"
+	"strings"
 
 	"html/template"
 
 	"github.com/qor/auth"
+	"github.com/qor/auth/auth_identity"
 	"github.com/qor/auth/claims"
 	"github.com/qor/mailer"
 )
@@ -40,4 +42,24 @@ var DefaultResetPasswordMailer = func(email string, context *auth.Context, claim
 			"reset_password_url": resetPasswordURL.String(),
 		}),
 	)
+}
+
+// DefaultResetPasswordHandler default reset password handler
+var DefaultResetPasswordHandler = func(context *auth.Context) error {
+	var (
+		authInfo    auth_identity.Basic
+		email       = context.Request.Form.Get("email")
+		provider, _ = context.Provider.(*Provider)
+	)
+
+	authInfo.Provider = provider.GetName()
+	authInfo.UID = strings.TrimSpace(email)
+
+	currentUser, err := context.Auth.UserStorer.Get(authInfo.ToClaims(), context)
+
+	if err != nil {
+		return err
+	}
+
+	return provider.ResetPasswordMailer(email, context, authInfo.ToClaims(), currentUser)
 }
