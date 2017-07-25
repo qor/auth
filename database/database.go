@@ -1,12 +1,14 @@
 package database
 
 import (
+	"net/http"
 	"strings"
 
 	"github.com/qor/auth"
 	"github.com/qor/auth/claims"
 	"github.com/qor/auth/database/encryptor"
 	"github.com/qor/auth/database/encryptor/bcrypt_encryptor"
+	"github.com/qor/session"
 )
 
 // Config database config
@@ -113,7 +115,12 @@ func (provider Provider) ServeHTTP(context *auth.Context) {
 				case "new":
 					context.Auth.Config.Render.Execute("auth/password/new", context, context.Request, context.Writer)
 				case "recover":
-					provider.ResetPasswordHandler(context)
+					err := provider.ResetPasswordHandler(context)
+					if err != nil {
+						context.SessionManager.Flash(req, session.Message{Message: err.Error(), Type: "error"})
+						http.Redirect(context.Writer, context.Request, context.Auth.AuthURL("database/password/new"), http.StatusSeeOther)
+						return
+					}
 				default:
 					return
 				}

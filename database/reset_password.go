@@ -1,6 +1,7 @@
 package database
 
 import (
+	"net/http"
 	"net/mail"
 	"net/url"
 	"path"
@@ -61,5 +62,10 @@ var DefaultResetPasswordHandler = func(context *auth.Context) error {
 		return err
 	}
 
-	return provider.ResetPasswordMailer(email, context, authInfo.ToClaims(), currentUser)
+	err = provider.ResetPasswordMailer(email, context, authInfo.ToClaims(), currentUser)
+
+	if err == nil {
+		http.Redirect(context.Writer, context.Request, "/", http.StatusSeeOther)
+	}
+	return err
 }
