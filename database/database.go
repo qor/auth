@@ -17,6 +17,7 @@ type Config struct {
 	Encryptor           encryptor.Interface
 	AuthorizeHandler    func(*auth.Context) (*claims.Claims, error)
 	RegisterHandler     func(*auth.Context) (*claims.Claims, error)
+	ConfirmHandler      func(*auth.Context) error
 }
 
 // New initialize database provider
@@ -91,7 +92,7 @@ func (provider Provider) ServeHTTP(context *auth.Context) {
 		// eg: /database/confirm
 		switch paths[1] {
 		case "confirm":
-			// TODO parse code & confirm account
+			provider.ConfirmHandler(context)
 		}
 		return
 	}
