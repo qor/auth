@@ -93,6 +93,16 @@ func (provider Provider) ServeHTTP(context *auth.Context) {
 		switch paths[1] {
 		case "confirm":
 			provider.ConfirmHandler(context)
+		case "password":
+			if len(paths) >= 3 {
+				switch paths[2] {
+				case "new":
+					context.Auth.Config.Render.Execute("auth/password/new", context, context.Request, context.Writer)
+				default:
+					return
+				}
+			}
+			provider.ResetPasswordMailer(context)
 		}
 		return
 	}
