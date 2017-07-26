@@ -21,13 +21,6 @@ var ConfirmationMailSubject = "Please confirm your account"
 var DefaultConfirmationMailer = func(email string, context *auth.Context, claims *claims.Claims, currentUser interface{}) error {
 	claims.Subject = "confirm"
 
-	var confirmURL url.URL
-	if context.Request != nil && context.Request.URL != nil {
-		confirmURL.Host = context.Request.URL.Host
-		confirmURL.Scheme = context.Request.URL.Scheme
-	}
-	confirmURL.Path = path.Join(context.Auth.AuthURL("database/confirm"), context.Auth.SignedToken(claims))
-
 	return context.Auth.Mailer.Send(
 		mailer.Email{
 			TO:      []mail.Address{{Address: email}},
@@ -38,10 +31,19 @@ var DefaultConfirmationMailer = func(email string, context *auth.Context, claims
 			Request: context.Request,
 			Writer:  context.Writer,
 		}.Funcs(template.FuncMap{
-			"current_user": currentUser,
-			"confirm_url":  confirmURL.String(),
-		}),
-	)
+			"current_user": func() interface{} {
+				return currentUser
+			},
+			"confirm_url": func() string {
+				var confirmURL url.URL
+				if context.Request != nil && context.Request.URL != nil {
+					confirmURL.Host = context.Request.URL.Host
+					confirmURL.Scheme = context.Request.URL.Scheme
+				}
+				confirmURL.Path = path.Join(context.Auth.AuthURL("database/confirm"), context.Auth.SignedToken(claims))
+				return confirmURL.String()
+			},
+		}))
 }
 
 // DefaultConfirmHandler default confirm handler
