@@ -11,15 +11,11 @@
   {{end}}
 
   <div>
-    <form action="{{.AuthURL "database/password/recover"}}" method="POST">
+    <form action="{{.AuthURL "database/password"}}" method="POST">
       <input type="hidden" name="reset_password_token" value="{{reset_password_token}}">
 
       <div>
-        New Password:  <input name="password">
-      </div>
-
-      <div>
-        Confirm new password:  <input name="password">
+        New Password:  <input name="new_password">
       </div>
 
       <input type="submit">

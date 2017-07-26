@@ -14,14 +14,15 @@ import (
 
 // Config database config
 type Config struct {
-	Confirmable          bool
-	ConfirmMailer        func(email string, context *auth.Context, claims *claims.Claims, currentUser interface{}) error
-	ConfirmHandler       func(*auth.Context) error
-	ResetPasswordMailer  func(email string, context *auth.Context, claims *claims.Claims, currentUser interface{}) error
-	ResetPasswordHandler func(*auth.Context) error
-	Encryptor            encryptor.Interface
-	AuthorizeHandler     func(*auth.Context) (*claims.Claims, error)
-	RegisterHandler      func(*auth.Context) (*claims.Claims, error)
+	Confirmable            bool
+	ConfirmMailer          func(email string, context *auth.Context, claims *claims.Claims, currentUser interface{}) error
+	ConfirmHandler         func(*auth.Context) error
+	ResetPasswordMailer    func(email string, context *auth.Context, claims *claims.Claims, currentUser interface{}) error
+	ResetPasswordHandler   func(*auth.Context) error
+	RecoverPasswordHandler func(*auth.Context) error
+	Encryptor              encryptor.Interface
+	AuthorizeHandler       func(*auth.Context) (*claims.Claims, error)
+	RegisterHandler        func(*auth.Context) (*claims.Claims, error)
 }
 
 // New initialize database provider
@@ -50,6 +51,10 @@ func New(config *Config) *Provider {
 
 	if config.ResetPasswordHandler == nil {
 		config.ResetPasswordHandler = DefaultResetPasswordHandler
+	}
+
+	if config.RecoverPasswordHandler == nil {
+		config.RecoverPasswordHandler = DefaultRecoverPasswordHandler
 	}
 
 	if config.AuthorizeHandler == nil {
@@ -129,7 +134,7 @@ func (provider Provider) ServeHTTP(context *auth.Context) {
 					context.SessionManager.Flash(req, session.Message{Message: ErrInvalidResetPasswordToken.Error(), Type: "error"})
 					http.Redirect(context.Writer, context.Request, context.Auth.AuthURL("database/password/new"), http.StatusSeeOther)
 				case "recover":
-					err := provider.ResetPasswordHandler(context)
+					err := provider.RecoverPasswordHandler(context)
 					if err != nil {
 						context.SessionManager.Flash(req, session.Message{Message: err.Error(), Type: "error"})
 						http.Redirect(context.Writer, context.Request, context.Auth.AuthURL("database/password/new"), http.StatusSeeOther)
@@ -138,6 +143,13 @@ func (provider Provider) ServeHTTP(context *auth.Context) {
 				default:
 					return
 				}
+			}
+
+			err := provider.ResetPasswordHandler(context)
+			if err != nil {
+				context.SessionManager.Flash(req, session.Message{Message: err.Error(), Type: "error"})
+				http.Redirect(context.Writer, context.Request, context.Auth.AuthURL("database/password/new"), http.StatusSeeOther)
+				return
 			}
 		}
 		return

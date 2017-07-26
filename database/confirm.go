@@ -4,6 +4,7 @@ import (
 	"html/template"
 	"net/mail"
 	"path"
+	"reflect"
 	"strings"
 	"time"
 
@@ -16,6 +17,9 @@ import (
 
 // ConfirmationMailSubject confirmation mail's subject
 var ConfirmationMailSubject = "Please confirm your account"
+
+// ConfirmedAccountFlashMessage confirmed your account message
+var ConfirmedAccountFlashMessage = "Confirmed your account!"
 
 // DefaultConfirmationMailer default confirm mailer
 var DefaultConfirmationMailer = func(email string, context *auth.Context, claims *claims.Claims, currentUser interface{}) error {
@@ -58,14 +62,15 @@ var DefaultConfirmHandler = func(context *auth.Context) error {
 		if err = claims.Valid(); err == nil {
 			authInfo.Provider = provider.GetName()
 			authInfo.UID = claims.Id
+			authIdentity := reflect.New(utils.ModelType(context.Auth.Config.AuthIdentityModel)).Interface()
 
-			if tx.Model(context.Auth.AuthIdentityModel).Where(authInfo).Scan(&authInfo).RecordNotFound() {
+			if tx.Where(authInfo).First(authIdentity).RecordNotFound() {
 				return auth.ErrInvalidAccount
 			}
 
 			now := time.Now()
 			authInfo.ConfirmedAt = &now
-			return tx.Model(context.Auth.AuthIdentityModel).Save(&authInfo).Error
+			return tx.Model(authIdentity).Update(authInfo).Error
 		}
 	}
 
