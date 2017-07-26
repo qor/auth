@@ -75,6 +75,10 @@ func (Provider) GetName() string {
 // ConfigAuth config auth
 func (provider Provider) ConfigAuth(auth *auth.Auth) {
 	auth.Render.RegisterViewPath("github.com/qor/auth/database/views")
+
+	if auth.Mailer != nil {
+		auth.Mailer.RegisterViewPath("github.com/qor/auth/database/views/mailers")
+	}
 }
 
 // Login implemented login with database provider

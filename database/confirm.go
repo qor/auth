@@ -3,7 +3,6 @@ package database
 import (
 	"html/template"
 	"net/mail"
-	"net/url"
 	"path"
 	"strings"
 	"time"
@@ -12,6 +11,7 @@ import (
 	"github.com/qor/auth/auth_identity"
 	"github.com/qor/auth/claims"
 	"github.com/qor/mailer"
+	"github.com/qor/qor/utils"
 )
 
 // ConfirmationMailSubject confirmation mail's subject
@@ -35,11 +35,7 @@ var DefaultConfirmationMailer = func(email string, context *auth.Context, claims
 				return currentUser
 			},
 			"confirm_url": func() string {
-				var confirmURL url.URL
-				if context.Request != nil && context.Request.URL != nil {
-					confirmURL.Host = context.Request.URL.Host
-					confirmURL.Scheme = context.Request.URL.Scheme
-				}
+				confirmURL := utils.GetAbsURL(context.Request)
 				confirmURL.Path = path.Join(context.Auth.AuthURL("database/confirm"), context.Auth.SignedToken(claims))
 				return confirmURL.String()
 			},

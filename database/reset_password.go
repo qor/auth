@@ -3,7 +3,6 @@ package database
 import (
 	"net/http"
 	"net/mail"
-	"net/url"
 	"path"
 	"strings"
 
@@ -13,6 +12,7 @@ import (
 	"github.com/qor/auth/auth_identity"
 	"github.com/qor/auth/claims"
 	"github.com/qor/mailer"
+	"github.com/qor/qor/utils"
 )
 
 // ResetPasswordMailSubject reset password mail's subject
@@ -36,11 +36,7 @@ var DefaultResetPasswordMailer = func(email string, context *auth.Context, claim
 				return currentUser
 			},
 			"reset_password_url": func() string {
-				var resetPasswordURL url.URL
-				if context.Request != nil && context.Request.URL != nil {
-					resetPasswordURL.Host = context.Request.URL.Host
-					resetPasswordURL.Scheme = context.Request.URL.Scheme
-				}
+				resetPasswordURL := utils.GetAbsURL(context.Request)
 				resetPasswordURL.Path = path.Join(context.Auth.AuthURL("database/confirm"), context.Auth.SignedToken(claims))
 				return resetPasswordURL.String()
 			},
@@ -50,6 +46,8 @@ var DefaultResetPasswordMailer = func(email string, context *auth.Context, claim
 
 // DefaultResetPasswordHandler default reset password handler
 var DefaultResetPasswordHandler = func(context *auth.Context) error {
+	context.Request.ParseForm()
+
 	var (
 		authInfo    auth_identity.Basic
 		email       = context.Request.Form.Get("email")
