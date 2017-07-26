@@ -1,6 +1,7 @@
 package database
 
 import (
+	"html/template"
 	"net/http"
 	"strings"
 
@@ -118,6 +119,15 @@ func (provider Provider) ServeHTTP(context *auth.Context) {
 				switch paths[2] {
 				case "new":
 					context.Auth.Config.Render.Execute("auth/password/new", context, context.Request, context.Writer)
+				case "edit":
+					if len(paths) == 4 {
+						context.Auth.Config.Render.Funcs(template.FuncMap{
+							"reset_password_token": func() string { return paths[3] },
+						}).Execute("auth/password/edit", context, context.Request, context.Writer)
+						return
+					}
+					context.SessionManager.Flash(req, session.Message{Message: ErrInvalidResetPasswordToken.Error(), Type: "error"})
+					http.Redirect(context.Writer, context.Request, context.Auth.AuthURL("database/password/new"), http.StatusSeeOther)
 				case "recover":
 					err := provider.ResetPasswordHandler(context)
 					if err != nil {
