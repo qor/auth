@@ -21,6 +21,7 @@ import (
 // Auth auth struct
 type Auth struct {
 	*Config
+	Modules
 	providers []Provider
 }
 
