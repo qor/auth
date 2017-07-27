@@ -10,6 +10,7 @@ import (
 // Context context
 type Context struct {
 	*Auth
+	Event    Event
 	Claims   *claims.Claims
 	Provider Provider
 	Request  *http.Request

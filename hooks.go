@@ -1,5 +1,8 @@
 package auth
 
+// Event event name
+type Event string
+
 // Hooks callbacks implemention
 type Hooks struct {
 	beforeHooks map[string][]Hook
