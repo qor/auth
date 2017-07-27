@@ -17,6 +17,7 @@ var Auth = auth.New(&auth.Config{
 	DB:        db.DB,
 	Render:    config.View,
 	UserModel: models.User{},
+	Mailer:    Mailer, // used to send emails, refer: https://github.com/qor/mailer
 })
 
 // Register auth providers
@@ -50,6 +51,3 @@ func main() {
 * Explain how to overwrite login, register pages
 * Explain how to handle session
 * Explain how to customize handlers, write themes
-* Intergrate Mailer
-    Confirmation
-    Forgot password
