@@ -23,4 +23,5 @@ func (modules *Modules) Get(name string) Module {
 // Module module definition
 type Module interface {
 	GetName() string
+	RegisterHooks(*Hooks)
 }
