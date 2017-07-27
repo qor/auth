@@ -14,6 +14,7 @@ import (
 
 // Config database config
 type Config struct {
+	auth.Modules
 	Confirmable            bool
 	ConfirmMailer          func(email string, context *auth.Context, claims *claims.Claims, currentUser interface{}) error
 	ConfirmHandler         func(*auth.Context) error
