@@ -1,16 +1,17 @@
 package confirmable
 
 import (
+	"html/template"
 	"net/mail"
 	"path"
 	"reflect"
 	"strings"
 	"time"
 
-	"github.com/alecthomas/template"
 	"github.com/qor/auth"
 	"github.com/qor/auth/auth_identity"
 	"github.com/qor/auth/claims"
+	"github.com/qor/auth/providers/password"
 	"github.com/qor/mailer"
 	"github.com/qor/qor/utils"
 )
@@ -80,7 +81,8 @@ func (Confirmable) GetName() string {
 func (Confirmable) RegisterHooks(hooks *auth.Hooks) {
 	hooks.After("*", auth.Hook{
 		Name: "confirmable",
-		Handler: func(context *auth.Context) error {
+		Handle: func(context *auth.Context) error {
+			return nil
 		},
 	})
 }
@@ -89,7 +91,7 @@ func (Confirmable) RegisterHooks(hooks *auth.Hooks) {
 var DefaultConfirmHandler = func(context *auth.Context) error {
 	var (
 		authInfo    auth_identity.Basic
-		provider, _ = context.Provider.(*Provider)
+		provider, _ = context.Provider.(*password.Provider)
 		tx          = context.Auth.GetDB(context.Request)
 		paths       = strings.Split(context.Request.URL.Path, "/")
 		token       = paths[len(paths)-1]
