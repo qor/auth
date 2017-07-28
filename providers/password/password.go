@@ -1,6 +1,7 @@
 package password
 
 import (
+	"fmt"
 	"html/template"
 	"net/http"
 	"strings"
@@ -15,9 +16,6 @@ import (
 // Config database config
 type Config struct {
 	auth.Modules
-	Confirmable            bool
-	ConfirmMailer          func(email string, context *auth.Context, claims *claims.Claims, currentUser interface{}) error
-	ConfirmHandler         func(*auth.Context) error
 	ResetPasswordMailer    func(email string, context *auth.Context, claims *claims.Claims, currentUser interface{}) error
 	ResetPasswordHandler   func(*auth.Context) error
 	RecoverPasswordHandler func(*auth.Context) error
@@ -37,18 +35,6 @@ func New(config *Config) *Provider {
 	}
 
 	provider := &Provider{Config: config}
-
-	if config.ConfirmMailer == nil {
-		config.ConfirmMailer = DefaultConfirmationMailer
-	}
-
-	if config.ConfirmHandler == nil {
-		config.ConfirmHandler = DefaultConfirmHandler
-	}
-
-	if config.ResetPasswordMailer == nil {
-		config.ResetPasswordMailer = DefaultResetPasswordMailer
-	}
 
 	if config.ResetPasswordHandler == nil {
 		config.ResetPasswordHandler = DefaultResetPasswordHandler
@@ -90,6 +76,9 @@ func (provider Provider) ConfigAuth(auth *auth.Auth) {
 
 // Login implemented login with database provider
 func (provider Provider) Login(context *auth.Context) {
+	context.Call("login", func(*auth.Context) error {
+		fmt.Println("hello world")
+	})
 	context.Auth.LoginHandler(context, provider.AuthorizeHandler)
 }
 
@@ -118,8 +107,6 @@ func (provider Provider) ServeHTTP(context *auth.Context) {
 	if len(paths) >= 2 {
 		// eg: /database/confirm
 		switch paths[1] {
-		case "confirm":
-			provider.ConfirmHandler(context)
 		case "password":
 			if len(paths) >= 3 {
 				switch paths[2] {

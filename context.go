@@ -10,11 +10,14 @@ import (
 // Context context
 type Context struct {
 	*Auth
-	Event    Event
-	Claims   *claims.Claims
-	Provider Provider
-	Request  *http.Request
-	Writer   http.ResponseWriter
+	Claims      *claims.Claims
+	Provider    Provider
+	Request     *http.Request
+	Writer      http.ResponseWriter
+	Event       Event
+	Errors      []error
+	CurrentUser interface{}
+	AuthInfo    interface{}
 }
 
 // Flashes get flash messages
