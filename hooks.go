@@ -24,6 +24,6 @@ func (Hooks) Execute(name string, context *Context) error {
 }
 
 type Hook struct {
-	Name   string
-	Handle func(*Context) error
+	Name    string
+	Handler func(*Context) error
 }

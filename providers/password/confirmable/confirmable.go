@@ -81,7 +81,7 @@ func (Confirmable) GetName() string {
 func (Confirmable) RegisterHooks(hooks *auth.Hooks) {
 	hooks.After("*", auth.Hook{
 		Name: "confirmable",
-		Handle: func(context *auth.Context) error {
+		Handler: func(context *auth.Context) error {
 			return nil
 		},
 	})
