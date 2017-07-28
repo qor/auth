@@ -3,27 +3,53 @@ package auth
 // Event event name
 type Event string
 
+var (
+	// EventLogin login event
+	EventLogin Event = "login"
+	// EventRegister register event
+	EventRegister Event = "register"
+	// EventAny any event
+	EventAny Event = "*"
+)
+
+// HooksInterface hooks interface
+type HooksInterface interface {
+	GetHooks() Hooks
+}
+
 // Hooks callbacks implemention
 type Hooks struct {
-	beforeHooks map[string][]Hook
-	afterHooks  map[string][]Hook
+	beforeHooks map[Event][]Hook
+	afterHooks  map[Event][]Hook
 }
 
-func (Hooks) Before(name string, hook Hook) {
+// GetHooks get hooks
+func (hooks Hooks) GetHooks() Hooks {
+	return hooks
 }
 
-func (Hooks) After(name string, hook Hook) {
+// Before register before hooks
+func (hooks Hooks) Before(name Event, hook Hook) {
+	if hs, ok := hooks.beforeHooks[name]; ok {
+		hooks.beforeHooks[name] = append(hs, hook)
+		return
+	}
+
+	hooks.beforeHooks[name] = []Hook{hook}
 }
 
-func (Hooks) Register(hook Hook) {
+// After register after callbacks
+func (hooks Hooks) After(name Event, hook Hook) {
+	if hs, ok := hooks.afterHooks[name]; ok {
+		hooks.afterHooks[name] = append(hs, hook)
+		return
+	}
+
+	hooks.afterHooks[name] = []Hook{hook}
 }
 
-// Execute execute hooks
-func (Hooks) Execute(name string, context *Context) error {
-	return nil
-}
-
+// Hook hook struct
 type Hook struct {
 	Name    string
-	Handler func(*Context) error
+	Handler func(event Event, context *Context) error
 }

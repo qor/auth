@@ -76,7 +76,7 @@ func (provider Provider) ConfigAuth(auth *auth.Auth) {
 
 // Login implemented login with database provider
 func (provider Provider) Login(context *auth.Context) {
-	context.Call("login", func(*auth.Context) error {
+	context.Call("login", func(context *auth.Context) error {
 		fmt.Println("hello world")
 	})
 	context.Auth.LoginHandler(context, provider.AuthorizeHandler)

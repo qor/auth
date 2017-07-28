@@ -2,11 +2,14 @@ package auth
 
 // Modules modules container
 type Modules struct {
+	Hooks
 	Modules []Module
 }
 
 // Use use module
 func (modules *Modules) Use(module Module) {
+	module.RegisterHooks(&modules.Hooks)
+
 	modules.Modules = append(modules.Modules, module)
 }
 
