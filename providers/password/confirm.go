@@ -25,6 +25,9 @@ var (
 	// ConfirmedAccountFlashMessage confirmed your account message
 	ConfirmedAccountFlashMessage = "Confirmed your account!"
 
+	// ConfirmFlashMessage confirm account flash message
+	ConfirmFlashMessage = "Please confirm your account"
+
 	// ErrAlreadyConfirmed account already confirmed error
 	ErrAlreadyConfirmed = errors.New("Your account already been confirmed")
 

@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/qor/auth"
+	"github.com/qor/auth/auth_identity"
 	"github.com/qor/auth/claims"
 	"github.com/qor/auth/providers/password/encryptor"
 	"github.com/qor/auth/providers/password/encryptor/bcrypt_encryptor"
@@ -14,15 +15,17 @@ import (
 
 // Config password config
 type Config struct {
-	Confirmable            bool
-	ConfirmMailer          func(email string, context *auth.Context, claims *claims.Claims, currentUser interface{}) error
-	ConfirmHandler         func(*auth.Context) error
+	Confirmable    bool
+	ConfirmMailer  func(email string, context *auth.Context, claims *claims.Claims, currentUser interface{}) error
+	ConfirmHandler func(*auth.Context) error
+
 	ResetPasswordMailer    func(email string, context *auth.Context, claims *claims.Claims, currentUser interface{}) error
 	ResetPasswordHandler   func(*auth.Context) error
 	RecoverPasswordHandler func(*auth.Context) error
-	Encryptor              encryptor.Interface
-	AuthorizeHandler       func(*auth.Context) (*claims.Claims, error)
-	RegisterHandler        func(*auth.Context) (*claims.Claims, error)
+
+	Encryptor        encryptor.Interface
+	AuthorizeHandler func(*auth.Context) (*claims.Claims, error)
+	RegisterHandler  func(*auth.Context) (*claims.Claims, error)
 }
 
 // New initialize password provider
@@ -117,13 +120,41 @@ func (provider Provider) ServeHTTP(context *auth.Context) {
 	if len(paths) >= 2 {
 		switch paths[1] {
 		case "confirmation":
+			var err error
+
 			if len(paths) >= 3 {
 				switch paths[2] {
 				case "new":
 					// render new confirmation page
 					context.Auth.Config.Render.Execute("auth/confirmation/new", context, context.Request, context.Writer)
 				case "send":
+					var (
+						currentUser interface{}
+						authInfo    auth_identity.Basic
+						tx          = context.Auth.GetDB(req)
+					)
+
+					authInfo.Provider = provider.GetName()
+					authInfo.UID = strings.TrimSpace(req.Form.Get("email"))
+					if tx.Model(context.Auth.AuthIdentityModel).Where(authInfo).Scan(&authInfo).RecordNotFound() {
+						err = auth.ErrInvalidAccount
+					}
+
+					if err == nil {
+						if currentUser, err = context.Auth.UserStorer.Get(authInfo.ToClaims(), context); err == nil {
+							err = provider.Config.ConfirmMailer(authInfo.UID, context, authInfo.ToClaims(), currentUser)
+						}
+					}
+
+					if err == nil {
+						context.SessionManager.Flash(req, session.Message{Message: ConfirmFlashMessage, Type: "success"})
+						http.Redirect(context.Writer, context.Request, "/", http.StatusSeeOther)
+					}
 				}
+			}
+
+			if err != nil {
+				context.SessionManager.Flash(req, session.Message{Message: err.Error(), Type: "error"})
 			}
 			// render new confirmation page
 			context.Auth.Config.Render.Execute("auth/confirmation/new", context, context.Request, context.Writer)

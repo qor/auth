@@ -8,6 +8,7 @@ import (
 	"github.com/qor/auth/auth_identity"
 	"github.com/qor/auth/claims"
 	"github.com/qor/qor/utils"
+	"github.com/qor/session"
 )
 
 // DefaultAuthorizeHandler default authorize handler
@@ -81,6 +82,7 @@ var DefaultRegisterHandler = func(context *auth.Context) (*claims.Claims, error)
 		authIdentity := reflect.New(utils.ModelType(context.Auth.Config.AuthIdentityModel)).Interface()
 		if err = tx.Where(authInfo).FirstOrCreate(authIdentity).Error; err == nil {
 			if provider.Config.Confirmable {
+				context.SessionManager.Flash(req, session.Message{Message: ConfirmFlashMessage, Type: "success"})
 				err = provider.Config.ConfirmMailer(schema.Email, context, authInfo.ToClaims(), currentUser)
 			}
 
