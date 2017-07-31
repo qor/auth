@@ -15,6 +15,7 @@ import (
 	"github.com/qor/auth/claims"
 	"github.com/qor/mailer"
 	"github.com/qor/qor/utils"
+	"github.com/qor/session"
 )
 
 // ConfirmationMailSubject confirmation mail's subject
@@ -78,6 +79,7 @@ var DefaultConfirmHandler = func(context *auth.Context) error {
 					now := time.Now()
 					authInfo.ConfirmedAt = &now
 					if err = tx.Model(authIdentity).Update(authInfo).Error; err == nil {
+						context.SessionManager.Flash(context.Request, session.Message{Message: ConfirmedAccountFlashMessage, Type: "success"})
 						http.Redirect(context.Writer, context.Request, "/", http.StatusSeeOther)
 						return nil
 					}
