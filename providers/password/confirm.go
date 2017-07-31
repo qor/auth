@@ -1,7 +1,9 @@
 package password
 
 import (
+	"errors"
 	"html/template"
+	"net/http"
 	"net/mail"
 	"path"
 	"reflect"
@@ -17,6 +19,9 @@ import (
 
 // ConfirmationMailSubject confirmation mail's subject
 var ConfirmationMailSubject = "Please confirm your account"
+
+// ErrAlreadyConfirmed account already confirmed error
+var ErrAlreadyConfirmed = errors.New("Your account already been confirmed")
 
 // ConfirmedAccountFlashMessage confirmed your account message
 var ConfirmedAccountFlashMessage = "Confirmed your account!"
@@ -65,12 +70,20 @@ var DefaultConfirmHandler = func(context *auth.Context) error {
 			authIdentity := reflect.New(utils.ModelType(context.Auth.Config.AuthIdentityModel)).Interface()
 
 			if tx.Where(authInfo).First(authIdentity).RecordNotFound() {
-				return auth.ErrInvalidAccount
+				err = auth.ErrInvalidAccount
 			}
 
-			now := time.Now()
-			authInfo.ConfirmedAt = &now
-			return tx.Model(authIdentity).Update(authInfo).Error
+			if err == nil {
+				if authInfo.ConfirmedAt == nil {
+					now := time.Now()
+					authInfo.ConfirmedAt = &now
+					if err = tx.Model(authIdentity).Update(authInfo).Error; err == nil {
+						http.Redirect(context.Writer, context.Request, "/", http.StatusSeeOther)
+						return nil
+					}
+				}
+				err = ErrAlreadyConfirmed
+			}
 		}
 	}
 

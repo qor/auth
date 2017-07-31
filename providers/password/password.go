@@ -116,14 +116,27 @@ func (provider Provider) ServeHTTP(context *auth.Context) {
 
 	if len(paths) >= 2 {
 		switch paths[1] {
-		// confirm user
 		case "confirm":
-			provider.ConfirmHandler(context)
-
-			// reset password
+			// confirm user
+			err := provider.ConfirmHandler(context)
+			if err != nil {
+				context.SessionManager.Flash(req, session.Message{Message: err.Error(), Type: "error"})
+				http.Redirect(context.Writer, context.Request, "/", http.StatusSeeOther)
+				return
+			}
 		case "new":
+			// render change password page
 			context.Auth.Config.Render.Execute("auth/password/new", context, context.Request, context.Writer)
+		case "recover":
+			// send recover password mail
+			err := provider.RecoverPasswordHandler(context)
+			if err != nil {
+				context.SessionManager.Flash(req, session.Message{Message: err.Error(), Type: "error"})
+				http.Redirect(context.Writer, context.Request, context.Auth.AuthURL("password/new"), http.StatusSeeOther)
+				return
+			}
 		case "edit":
+			// render edit password page
 			if len(paths) == 3 {
 				context.Auth.Config.Render.Funcs(template.FuncMap{
 					"reset_password_token": func() string { return paths[3] },
@@ -132,14 +145,8 @@ func (provider Provider) ServeHTTP(context *auth.Context) {
 			}
 			context.SessionManager.Flash(req, session.Message{Message: ErrInvalidResetPasswordToken.Error(), Type: "error"})
 			http.Redirect(context.Writer, context.Request, context.Auth.AuthURL("password/new"), http.StatusSeeOther)
-		case "recover":
-			err := provider.RecoverPasswordHandler(context)
-			if err != nil {
-				context.SessionManager.Flash(req, session.Message{Message: err.Error(), Type: "error"})
-				http.Redirect(context.Writer, context.Request, context.Auth.AuthURL("password/new"), http.StatusSeeOther)
-				return
-			}
 		case "update":
+			// update password
 			err := provider.ResetPasswordHandler(context)
 			if err != nil {
 				context.SessionManager.Flash(req, session.Message{Message: err.Error(), Type: "error"})
