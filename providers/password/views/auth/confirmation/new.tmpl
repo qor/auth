@@ -1,5 +1,5 @@
 <div style="margin:auto; text-align: center;">
-  <h2>Change your password</h2>
+  <h2>Resend Confirmation</h2>
 
   {{$flashes := .Flashes}}
   {{if $flashes}}
@@ -11,13 +11,8 @@
   {{end}}
 
   <div>
-    <form action="{{.AuthURL "password/password"}}" method="POST">
-      <input type="hidden" name="reset_password_token" value="{{reset_password_token}}">
-
-      <div>
-        New Password:  <input type="password" name="new_password">
-      </div>
-
+    <form action="{{.AuthURL "password/confirmation/send"}}" method="POST">
+      Email:  <input name="email">
       <input type="submit">
     </form>
   </div>
@@ -26,4 +21,3 @@
     <a href="{{.AuthURL "login"}}">Sign in</a>
   </div>
 </div>
-

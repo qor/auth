@@ -28,7 +28,7 @@ var DefaultAuthorizeHandler = func(context *auth.Context) (*claims.Claims, error
 	}
 
 	if provider.Config.Confirmable && authInfo.ConfirmedAt == nil {
-		return nil, auth.ErrUnconfirmed
+		return nil, ErrUnconfirmed
 	}
 
 	if err := provider.Encryptor.Compare(authInfo.EncryptedPassword, strings.TrimSpace(req.Form.Get("password"))); err == nil {

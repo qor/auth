@@ -18,14 +18,19 @@ import (
 	"github.com/qor/session"
 )
 
-// ConfirmationMailSubject confirmation mail's subject
-var ConfirmationMailSubject = "Please confirm your account"
+var (
+	// ConfirmationMailSubject confirmation mail's subject
+	ConfirmationMailSubject = "Please confirm your account"
 
-// ErrAlreadyConfirmed account already confirmed error
-var ErrAlreadyConfirmed = errors.New("Your account already been confirmed")
+	// ConfirmedAccountFlashMessage confirmed your account message
+	ConfirmedAccountFlashMessage = "Confirmed your account!"
 
-// ConfirmedAccountFlashMessage confirmed your account message
-var ConfirmedAccountFlashMessage = "Confirmed your account!"
+	// ErrAlreadyConfirmed account already confirmed error
+	ErrAlreadyConfirmed = errors.New("Your account already been confirmed")
+
+	// ErrUnconfirmed unauthorized error
+	ErrUnconfirmed = errors.New("You have to confirm your account before continuing")
+)
 
 // DefaultConfirmationMailer default confirm mailer
 var DefaultConfirmationMailer = func(email string, context *auth.Context, claims *claims.Claims, currentUser interface{}) error {
