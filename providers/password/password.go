@@ -1,4 +1,4 @@
-package database
+package password
 
 import (
 	"html/template"
@@ -7,8 +7,8 @@ import (
 
 	"github.com/qor/auth"
 	"github.com/qor/auth/claims"
-	"github.com/qor/auth/database/encryptor"
-	"github.com/qor/auth/database/encryptor/bcrypt_encryptor"
+	"github.com/qor/auth/providers/password/encryptor"
+	"github.com/qor/auth/providers/password/encryptor/bcrypt_encryptor"
 	"github.com/qor/session"
 )
 
