@@ -40,7 +40,7 @@ var DefaultConfirmationMailer = func(email string, context *auth.Context, claims
 			},
 			"confirm_url": func() string {
 				confirmURL := utils.GetAbsURL(context.Request)
-				confirmURL.Path = path.Join(context.Auth.AuthURL("database/confirm"), context.Auth.SignedToken(claims))
+				confirmURL.Path = path.Join(context.Auth.AuthURL("password/confirm"), context.Auth.SignedToken(claims))
 				return confirmURL.String()
 			},
 		}))

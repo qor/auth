@@ -12,7 +12,7 @@ import (
 	"github.com/qor/session"
 )
 
-// Config database config
+// Config password config
 type Config struct {
 	Confirmable            bool
 	ConfirmMailer          func(email string, context *auth.Context, claims *claims.Claims, currentUser interface{}) error
@@ -25,7 +25,7 @@ type Config struct {
 	RegisterHandler        func(*auth.Context) (*claims.Claims, error)
 }
 
-// New initialize database provider
+// New initialize password provider
 func New(config *Config) *Provider {
 	if config == nil {
 		config = &Config{}
@@ -68,45 +68,45 @@ func New(config *Config) *Provider {
 	return provider
 }
 
-// Provider provide login with database method
+// Provider provide login with password method
 type Provider struct {
 	*Config
 }
 
 // GetName return provider name
 func (Provider) GetName() string {
-	return "database"
+	return "password"
 }
 
 // ConfigAuth config auth
 func (provider Provider) ConfigAuth(auth *auth.Auth) {
-	auth.Render.RegisterViewPath("github.com/qor/auth/database/views")
+	auth.Render.RegisterViewPath("github.com/qor/auth/providers/password/views")
 
 	if auth.Mailer != nil {
-		auth.Mailer.RegisterViewPath("github.com/qor/auth/database/views/mailers")
+		auth.Mailer.RegisterViewPath("github.com/qor/auth/providers/password/views/mailers")
 	}
 }
 
-// Login implemented login with database provider
+// Login implemented login with password provider
 func (provider Provider) Login(context *auth.Context) {
 	context.Auth.LoginHandler(context, provider.AuthorizeHandler)
 }
 
-// Register implemented register with database provider
+// Register implemented register with password provider
 func (provider Provider) Register(context *auth.Context) {
 	context.Auth.RegisterHandler(context, provider.RegisterHandler)
 }
 
-// Logout implemented logout with database provider
+// Logout implemented logout with password provider
 func (provider Provider) Logout(context *auth.Context) {
 	context.Auth.LogoutHandler(context)
 }
 
-// Callback implement Callback with database provider
+// Callback implement Callback with password provider
 func (provider Provider) Callback(context *auth.Context) {
 }
 
-// ServeHTTP implement ServeHTTP with database provider
+// ServeHTTP implement ServeHTTP with password provider
 func (provider Provider) ServeHTTP(context *auth.Context) {
 	var (
 		req     = context.Request
@@ -115,43 +115,39 @@ func (provider Provider) ServeHTTP(context *auth.Context) {
 	)
 
 	if len(paths) >= 2 {
-		// eg: /database/confirm
 		switch paths[1] {
+		// confirm user
 		case "confirm":
 			provider.ConfirmHandler(context)
-		case "password":
-			if len(paths) >= 3 {
-				switch paths[2] {
-				case "new":
-					context.Auth.Config.Render.Execute("auth/password/new", context, context.Request, context.Writer)
-				case "edit":
-					if len(paths) == 4 {
-						context.Auth.Config.Render.Funcs(template.FuncMap{
-							"reset_password_token": func() string { return paths[3] },
-						}).Execute("auth/password/edit", context, context.Request, context.Writer)
-						return
-					}
-					context.SessionManager.Flash(req, session.Message{Message: ErrInvalidResetPasswordToken.Error(), Type: "error"})
-					http.Redirect(context.Writer, context.Request, context.Auth.AuthURL("database/password/new"), http.StatusSeeOther)
-				case "recover":
-					err := provider.RecoverPasswordHandler(context)
-					if err != nil {
-						context.SessionManager.Flash(req, session.Message{Message: err.Error(), Type: "error"})
-						http.Redirect(context.Writer, context.Request, context.Auth.AuthURL("database/password/new"), http.StatusSeeOther)
-						return
-					}
-				default:
-					return
-				}
-			}
 
+			// reset password
+		case "new":
+			context.Auth.Config.Render.Execute("auth/password/new", context, context.Request, context.Writer)
+		case "edit":
+			if len(paths) == 3 {
+				context.Auth.Config.Render.Funcs(template.FuncMap{
+					"reset_password_token": func() string { return paths[3] },
+				}).Execute("auth/password/edit", context, context.Request, context.Writer)
+				return
+			}
+			context.SessionManager.Flash(req, session.Message{Message: ErrInvalidResetPasswordToken.Error(), Type: "error"})
+			http.Redirect(context.Writer, context.Request, context.Auth.AuthURL("password/new"), http.StatusSeeOther)
+		case "recover":
+			err := provider.RecoverPasswordHandler(context)
+			if err != nil {
+				context.SessionManager.Flash(req, session.Message{Message: err.Error(), Type: "error"})
+				http.Redirect(context.Writer, context.Request, context.Auth.AuthURL("password/new"), http.StatusSeeOther)
+				return
+			}
+		case "update":
 			err := provider.ResetPasswordHandler(context)
 			if err != nil {
 				context.SessionManager.Flash(req, session.Message{Message: err.Error(), Type: "error"})
-				http.Redirect(context.Writer, context.Request, context.Auth.AuthURL("database/password/new"), http.StatusSeeOther)
+				http.Redirect(context.Writer, context.Request, context.Auth.AuthURL("password/new"), http.StatusSeeOther)
 				return
 			}
 		}
-		return
 	}
+
+	return
 }
