@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/qor/qor/utils"
-	"github.com/qor/roles"
 )
 
 // CurrentUser context key to get current user from Request
@@ -36,7 +35,7 @@ func (auth *Auth) GetCurrentUser(req *http.Request) interface{} {
 }
 
 // Restrict restrict middleware
-func (auth *Auth) Restrict(permission *roles.Permission) func(http.Handler) http.Handler {
+func (auth *Auth) Restrict(roles ...string) func(http.Handler) http.Handler {
 	return func(handler http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 			// Get Token from Header
