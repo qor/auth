@@ -12,7 +12,7 @@ import (
 const CurrentUser utils.ContextKey = "current_user"
 
 // GetCurrentUser get current user from request
-func (auth *Auth) GetCurrentUser(w http.ResponseWriter, req *http.Request) interface{} {
+func (auth *Auth) GetCurrentUser(req *http.Request) interface{} {
 	if currentUser := req.Context().Value(CurrentUser); currentUser != nil {
 		return currentUser
 	}
@@ -26,7 +26,7 @@ func (auth *Auth) GetCurrentUser(w http.ResponseWriter, req *http.Request) inter
 
 	claims, err := auth.Validate(tokenString)
 	if err == nil {
-		context := &Context{Auth: auth, Claims: claims, Request: req, Writer: w}
+		context := &Context{Auth: auth, Claims: claims, Request: req}
 		if user, err := auth.UserStorer.Get(claims, context); err == nil {
 			return user
 		}
@@ -43,7 +43,7 @@ func (auth *Auth) Restrict(permission *roles.Permission) func(http.Handler) http
 			var (
 				hasPermission bool
 				matchedRoles  []string
-				currentUser   = auth.GetCurrentUser(w, req)
+				currentUser   = auth.GetCurrentUser(req)
 			)
 
 			// get current user
