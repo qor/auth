@@ -1,11 +1,16 @@
 package authority
 
 import (
-	"context"
 	"net/http"
 
 	"github.com/qor/auth"
 	"github.com/qor/roles"
+	"github.com/qor/session"
+)
+
+var (
+	// AccessDeniedFlashMessage access denied message
+	AccessDeniedFlashMessage = "Access Denied!"
 )
 
 // Authority authority struct
@@ -36,19 +41,26 @@ func New(config *Config) *Authority {
 func (authority *Authority) Restrict(roles ...string) func(http.Handler) http.Handler {
 	return func(handler http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-			// Get current user from Header
-			var currentUser = authority.Auth.GetCurrentUser(req)
+			var currentUser interface{}
 
-			// get current user
-			if currentUser != nil {
-				req.WithContext(context.WithValue(req.Context(), auth.CurrentUser, currentUser))
+			// Get current user from request
+			if authority.Auth != nil {
+				currentUser = authority.Auth.GetCurrentUser(req)
 			}
 
 			if authority.Role.HasRole(req, currentUser, roles...) {
 				handler.ServeHTTP(w, req)
-			} else {
-				http.Redirect(w, req, authority.Auth.AuthURL("login"), http.StatusSeeOther)
+				return
 			}
+
+			authority.Auth.SessionManager.Flash(req, session.Message{Message: AccessDeniedFlashMessage})
+
+			if authority.Auth != nil {
+				http.Redirect(w, req, authority.Auth.AuthURL("login"), http.StatusSeeOther)
+				return
+			}
+
+			http.Redirect(w, req, "/", http.StatusSeeOther)
 		})
 	}
 }
