@@ -11,7 +11,7 @@
   {{end}}
 
   <div>
-    <form action="{{.AuthURL "password/password"}}" method="POST">
+    <form action="{{.AuthURL "password/update"}}" method="POST">
       <input type="hidden" name="reset_password_token" value="{{reset_password_token}}">
 
       <div>
