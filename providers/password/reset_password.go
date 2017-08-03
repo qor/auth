@@ -17,11 +17,16 @@ import (
 	"github.com/qor/session"
 )
 
-// ResetPasswordMailSubject reset password mail's subject
-var ResetPasswordMailSubject = "Reset your password"
+var (
+	// ResetPasswordMailSubject reset password mail's subject
+	ResetPasswordMailSubject = "Reset your password"
 
-// ChangedPasswordFlashMessage changed password success flash message
-var ChangedPasswordFlashMessage = "Changed your password!"
+	// SendChangePasswordMailFlashMessage send change password mail flash message
+	SendChangePasswordMailFlashMessage = "You will receive an email with instructions on how to reset your password in a few minutes"
+
+	// ChangedPasswordFlashMessage changed password success flash message
+	ChangedPasswordFlashMessage = "Changed your password!"
+)
 
 // DefaultResetPasswordMailer default reset password mailer
 var DefaultResetPasswordMailer = func(email string, context *auth.Context, claims *claims.Claims, currentUser interface{}) error {
@@ -71,6 +76,7 @@ var DefaultRecoverPasswordHandler = func(context *auth.Context) error {
 	err = provider.ResetPasswordMailer(email, context, authInfo.ToClaims(), currentUser)
 
 	if err == nil {
+		context.SessionManager.Flash(context.Request, session.Message{Message: SendChangePasswordMailFlashMessage, Type: "success"})
 		http.Redirect(context.Writer, context.Request, "/", http.StatusSeeOther)
 	}
 	return err
