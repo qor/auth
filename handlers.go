@@ -9,10 +9,8 @@ import (
 )
 
 func respondAfterLogged(claims *claims.Claims, context *Context) {
-	token := context.Auth.SignedToken(claims)
-
-	// Set auth session
-	context.SessionManager.Add(context.Request, context.Auth.Config.SessionName, token)
+	// login user
+	context.Auth.Login(claims, context.Request)
 
 	responder.With("html", func() {
 		// write cookie
