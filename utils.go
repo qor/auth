@@ -10,12 +10,8 @@ import (
 // CurrentUser context key to get current user from Request
 const CurrentUser utils.ContextKey = "current_user"
 
-// GetCurrentUser get current user from request
-func (auth *Auth) GetCurrentUser(req *http.Request) interface{} {
-	if currentUser := req.Context().Value(CurrentUser); currentUser != nil {
-		return currentUser
-	}
-
+// GetClaims get claims from Request
+func (auth *Auth) GetClaims(req *http.Request) (*claims.Claims, error) {
 	tokenString := req.Header.Get("Authorization")
 
 	// Get Token from Cookie
@@ -23,7 +19,16 @@ func (auth *Auth) GetCurrentUser(req *http.Request) interface{} {
 		tokenString = auth.SessionManager.Get(req, auth.Config.SessionName)
 	}
 
-	claims, err := auth.Validate(tokenString)
+	return auth.Validate(tokenString)
+}
+
+// GetCurrentUser get current user from request
+func (auth *Auth) GetCurrentUser(req *http.Request) interface{} {
+	if currentUser := req.Context().Value(CurrentUser); currentUser != nil {
+		return currentUser
+	}
+
+	claims, err := auth.GetClaims(req)
 	if err == nil {
 		context := &Context{Auth: auth, Claims: claims, Request: req}
 		if user, err := auth.UserStorer.Get(claims, context); err == nil {

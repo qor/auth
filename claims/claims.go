@@ -1,13 +1,18 @@
 package claims
 
 import (
+	"time"
+
 	jwt "github.com/dgrijalva/jwt-go"
 )
 
 // Claims auth claims
 type Claims struct {
-	Provider string `json:"provider,omitempty"`
-	UserID   string `json:"userid,omitempty"`
+	Provider         string     `json:"provider,omitempty"`
+	UserID           string     `json:"userid,omitempty"`
+	LastAuthTime     *time.Time `json:"auth_time,omitempty"`
+	LastActivityTime *time.Time `json:"activity_time,omitempty"`
+	LoggedAs         []string   `json:"logged_as,omitempty"`
 	jwt.StandardClaims
 }
 
