@@ -32,3 +32,9 @@ func (auth *Auth) GetCurrentUser(req *http.Request) interface{} {
 
 	return nil
 }
+
+// Logout log current user out
+func (auth *Auth) Logout(w http.ResponseWriter, req *http.Request) {
+	context := &Context{Auth: auth, Request: req, Writer: w}
+	auth.LogoutHandler(context)
+}
