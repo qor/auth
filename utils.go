@@ -39,15 +39,15 @@ func (auth *Auth) GetCurrentUser(req *http.Request) interface{} {
 	return nil
 }
 
-// Logout sign current user out
-func (auth *Auth) Logout(w http.ResponseWriter, req *http.Request) {
-	context := &Context{Auth: auth, Request: req, Writer: w}
-	auth.LogoutHandler(context)
-}
-
 // Login sign user in
 func (auth *Auth) Login(claimer claims.ClaimerInterface, req *http.Request) error {
 	claims := claimer.ToClaims()
 	token := auth.SignedToken(claims)
 	return auth.SessionManager.Add(req, auth.Config.SessionName, token)
+}
+
+// Logout sign current user out
+func (auth *Auth) Logout(w http.ResponseWriter, req *http.Request) {
+	context := &Context{Auth: auth, Request: req, Writer: w}
+	auth.LogoutHandler(context)
 }

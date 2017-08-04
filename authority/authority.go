@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/qor/auth"
+	"github.com/qor/auth/claims"
 	"github.com/qor/roles"
 	"github.com/qor/session"
 )
@@ -18,9 +19,15 @@ type Authority struct {
 	*Config
 }
 
+// AuthInterface auth interface
+type AuthInterface interface {
+	GetCurrentUser(req *http.Request) interface{}
+	GetClaims(req *http.Request) (*claims.Claims, error)
+}
+
 // Config authority config
 type Config struct {
-	Auth *auth.Auth
+	Auth AuthInterface
 	Role *roles.Role
 }
 
@@ -28,6 +35,10 @@ type Config struct {
 func New(config *Config) *Authority {
 	if config == nil {
 		config = &Config{}
+	}
+
+	if config.Auth == nil {
+		panic("Auth should not be nil for Authority")
 	}
 
 	if config.Role == nil {
@@ -44,19 +55,16 @@ func (authority *Authority) Restrict(roles ...string) func(http.Handler) http.Ha
 			var currentUser interface{}
 
 			// Get current user from request
-			if authority.Auth != nil {
-				currentUser = authority.Auth.GetCurrentUser(req)
-			}
+			currentUser = authority.Auth.GetCurrentUser(req)
 
 			if authority.Role.HasRole(req, currentUser, roles...) {
 				handler.ServeHTTP(w, req)
 				return
 			}
 
-			authority.Auth.SessionManager.Flash(req, session.Message{Message: AccessDeniedFlashMessage})
-
-			if authority.Auth != nil {
-				http.Redirect(w, req, authority.Auth.AuthURL("login"), http.StatusSeeOther)
+			if Auth, ok := authority.Auth.(*auth.Auth); ok {
+				Auth.SessionManager.Flash(req, session.Message{Message: AccessDeniedFlashMessage})
+				http.Redirect(w, req, Auth.AuthURL("login"), http.StatusSeeOther)
 				return
 			}
 
