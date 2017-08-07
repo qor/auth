@@ -14,8 +14,6 @@ import (
 	"github.com/qor/mailer"
 	"github.com/qor/qor/utils"
 	"github.com/qor/render"
-	"github.com/qor/session"
-	"github.com/qor/session/manager"
 )
 
 // Auth auth struct
@@ -29,14 +27,11 @@ type Config struct {
 	DB                *gorm.DB
 	Render            *render.Render
 	Mailer            *mailer.Mailer
-	SessionName       string
 	Prefix            string
-	SigningMethod     jwt.SigningMethod
-	SignedString      string
 	UserModel         interface{}
 	AuthIdentityModel interface{}
 	UserStorer        Storer
-	SessionManager    session.ManagerInterface
+	SessionStorer     SessionStorerInterface
 	ViewPaths         []string
 
 	// The time you want the user will be remembered without asking for credentials.
@@ -69,10 +64,6 @@ func New(config *Config) *Auth {
 		config.Prefix = fmt.Sprintf("/%v/", strings.Trim(config.Prefix, "/"))
 	}
 
-	if config.SessionName == "" {
-		config.SessionName = "_auth_session"
-	}
-
 	if config.AuthIdentityModel == nil {
 		config.AuthIdentityModel = &auth_identity.AuthIdentity{}
 	}
@@ -93,8 +84,10 @@ func New(config *Config) *Auth {
 		config.UserStorer = &UserStorer{}
 	}
 
-	if config.SessionManager == nil {
-		config.SessionManager = manager.SessionManager
+	if config.SessionStorer == nil {
+		config.SessionStorer = &SessionStorer{
+			SessionName: "_auth_session",
+		}
 	}
 
 	if config.RememberFor == 0 {
