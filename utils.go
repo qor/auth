@@ -31,3 +31,8 @@ func (auth *Auth) GetCurrentUser(req *http.Request) interface{} {
 func (auth *Auth) Login(claimer claims.ClaimerInterface, req *http.Request) error {
 	return auth.SessionStorer.Update(claimer.ToClaims(), req)
 }
+
+// Logout sign current user out
+func (auth *Auth) Logout(w http.ResponseWriter, req *http.Request) {
+	auth.SessionStorer.Delete(req)
+}

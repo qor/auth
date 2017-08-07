@@ -52,11 +52,13 @@ func (sessionStorer *SessionStorer) Get(req *http.Request) (*claims.Claims, erro
 
 // Update update claims with session manager
 func (sessionStorer *SessionStorer) Update(claims *claims.Claims, req *http.Request) error {
-	return nil
+	token := sessionStorer.SignedToken(claims)
+	return sessionStorer.SessionManager.Add(req, sessionStorer.SessionName, token)
 }
 
 // Delete delete claims from session manager
 func (sessionStorer *SessionStorer) Delete(req *http.Request) error {
+	sessionStorer.SessionManager.Pop(req, sessionStorer.SessionName)
 	return nil
 }
 

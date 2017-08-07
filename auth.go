@@ -12,6 +12,7 @@ import (
 	"github.com/qor/mailer"
 	"github.com/qor/qor/utils"
 	"github.com/qor/render"
+	"github.com/qor/session/manager"
 )
 
 // Auth auth struct
@@ -75,8 +76,9 @@ func New(config *Config) *Auth {
 
 	if config.SessionStorer == nil {
 		config.SessionStorer = &SessionStorer{
-			SessionName:   "_auth_session",
-			SigningMethod: jwt.SigningMethodHS256,
+			SessionName:    "_auth_session",
+			SessionManager: manager.SessionManager,
+			SigningMethod:  jwt.SigningMethodHS256,
 		}
 	}
 
