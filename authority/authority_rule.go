@@ -17,7 +17,7 @@ type Rule struct {
 // Handler generate roles checker
 func (authority Authority) Handler(rule Rule) roles.Checker {
 	return func(req *http.Request, user interface{}) bool {
-		claims, _ := authority.Auth.GetClaims(req)
+		claims, _ := authority.Auth.Get(req)
 
 		// Check Last Auth
 		if rule.TimeoutSinceLastAuth > 0 {

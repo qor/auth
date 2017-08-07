@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/qor/auth"
-	"github.com/qor/auth/claims"
 	"github.com/qor/roles"
 	"github.com/qor/session"
 )
@@ -21,8 +20,8 @@ type Authority struct {
 
 // AuthInterface auth interface
 type AuthInterface interface {
+	auth.SessionStorerInterface
 	GetCurrentUser(req *http.Request) interface{}
-	GetClaims(req *http.Request) (*claims.Claims, error)
 }
 
 // Config authority config
@@ -62,12 +61,7 @@ func (authority *Authority) Restrict(roles ...string) func(http.Handler) http.Ha
 				return
 			}
 
-			if Auth, ok := authority.Auth.(*auth.Auth); ok {
-				Auth.SessionManager.Flash(req, session.Message{Message: AccessDeniedFlashMessage})
-				http.Redirect(w, req, Auth.AuthURL("login"), http.StatusSeeOther)
-				return
-			}
-
+			authority.Auth.Flash(req, session.Message{Message: AccessDeniedFlashMessage})
 			http.Redirect(w, req, "/", http.StatusSeeOther)
 		})
 	}
