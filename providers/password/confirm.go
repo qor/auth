@@ -54,7 +54,7 @@ var DefaultConfirmationMailer = func(email string, context *auth.Context, claims
 			},
 			"confirm_url": func() string {
 				confirmURL := utils.GetAbsURL(context.Request)
-				confirmURL.Path = path.Join(context.Auth.AuthURL("password/confirm"), context.Auth.SignedToken(claims))
+				confirmURL.Path = path.Join(context.Auth.AuthURL("password/confirm"), context.SessionStorer.SignedToken(claims))
 				return confirmURL.String()
 			},
 		}))
@@ -70,7 +70,7 @@ var DefaultConfirmHandler = func(context *auth.Context) error {
 		token       = paths[len(paths)-1]
 	)
 
-	claims, err := context.Auth.Validate(token)
+	claims, err := context.SessionStorer.ValidateClaims(token)
 
 	if err == nil {
 		if err = claims.Valid(); err == nil {
@@ -87,7 +87,7 @@ var DefaultConfirmHandler = func(context *auth.Context) error {
 					now := time.Now()
 					authInfo.ConfirmedAt = &now
 					if err = tx.Model(authIdentity).Update(authInfo).Error; err == nil {
-						context.SessionManager.Flash(context.Request, session.Message{Message: ConfirmedAccountFlashMessage, Type: "success"})
+						context.SessionStorer.Flash(context.Request, session.Message{Message: ConfirmedAccountFlashMessage, Type: "success"})
 						http.Redirect(context.Writer, context.Request, "/", http.StatusSeeOther)
 						return nil
 					}

@@ -29,12 +29,12 @@ var DefaultLoginHandler = func(context *Context, authorize func(*Context) (*clai
 	)
 
 	if err == nil && claims != nil {
-		context.SessionManager.Flash(req, session.Message{Message: "logged"})
+		context.SessionStorer.Flash(req, session.Message{Message: "logged"})
 		respondAfterLogged(claims, context)
 		return
 	}
 
-	context.SessionManager.Flash(req, session.Message{Message: err.Error(), Type: "error"})
+	context.SessionStorer.Flash(req, session.Message{Message: err.Error(), Type: "error"})
 
 	// error handling
 	responder.With("html", func() {
@@ -57,7 +57,7 @@ var DefaultRegisterHandler = func(context *Context, register func(*Context) (*cl
 		return
 	}
 
-	context.SessionManager.Flash(req, session.Message{Message: err.Error(), Type: "error"})
+	context.SessionStorer.Flash(req, session.Message{Message: err.Error(), Type: "error"})
 
 	// error handling
 	responder.With("html", func() {

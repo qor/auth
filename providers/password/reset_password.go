@@ -48,7 +48,7 @@ var DefaultResetPasswordMailer = func(email string, context *auth.Context, claim
 			},
 			"reset_password_url": func() string {
 				resetPasswordURL := utils.GetAbsURL(context.Request)
-				resetPasswordURL.Path = path.Join(context.Auth.AuthURL("password/edit"), context.Auth.SignedToken(claims))
+				resetPasswordURL.Path = path.Join(context.Auth.AuthURL("password/edit"), context.SessionStorer.SignedToken(claims))
 				return resetPasswordURL.String()
 			},
 		}),
@@ -77,7 +77,7 @@ var DefaultRecoverPasswordHandler = func(context *auth.Context) error {
 	err = provider.ResetPasswordMailer(email, context, authInfo.ToClaims(), currentUser)
 
 	if err == nil {
-		context.SessionManager.Flash(context.Request, session.Message{Message: SendChangePasswordMailFlashMessage, Type: "success"})
+		context.SessionStorer.Flash(context.Request, session.Message{Message: SendChangePasswordMailFlashMessage, Type: "success"})
 		http.Redirect(context.Writer, context.Request, "/", http.StatusSeeOther)
 	}
 	return err
@@ -94,7 +94,7 @@ var DefaultResetPasswordHandler = func(context *auth.Context) error {
 		tx          = context.Auth.GetDB(context.Request)
 	)
 
-	claims, err := context.Auth.Validate(token)
+	claims, err := context.SessionStorer.ValidateClaims(token)
 
 	if err == nil {
 		if err = claims.Valid(); err == nil {
@@ -118,7 +118,7 @@ var DefaultResetPasswordHandler = func(context *auth.Context) error {
 	}
 
 	if err == nil {
-		context.SessionManager.Flash(context.Request, session.Message{Message: ChangedPasswordFlashMessage, Type: "success"})
+		context.SessionStorer.Flash(context.Request, session.Message{Message: ChangedPasswordFlashMessage, Type: "success"})
 		http.Redirect(context.Writer, context.Request, "/", http.StatusSeeOther)
 	}
 	return err

@@ -3,12 +3,10 @@ package google
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"reflect"
 
-	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/qor/auth"
 	"github.com/qor/auth/auth_identity"
 	"github.com/qor/auth/claims"
@@ -73,14 +71,9 @@ func New(config *Config) *GoogleProvider {
 			)
 
 			state := req.URL.Query().Get("state")
-			token, err := jwt.Parse(state, func(token *jwt.Token) (interface{}, error) {
-				if token.Method != context.Auth.Config.SigningMethod {
-					return nil, fmt.Errorf("unexpected signing method")
-				}
-				return []byte(context.Auth.Config.SignedString), nil
-			})
+			claims, err := context.Auth.SessionStorer.ValidateClaims(state)
 
-			if claims, ok := token.Claims.(*jwt.StandardClaims); ok && (!token.Valid || claims.Subject != "state") {
+			if err != nil || claims.Valid() != nil || claims.Subject != "state" {
 				return nil, auth.ErrUnauthorized
 			}
 
@@ -173,8 +166,9 @@ func (provider GoogleProvider) OAuthConfig(context *auth.Context) *oauth2.Config
 
 // Login implemented login with google provider
 func (provider GoogleProvider) Login(context *auth.Context) {
-	token := jwt.NewWithClaims(context.Auth.Config.SigningMethod, jwt.StandardClaims{Subject: "state"})
-	signedToken, _ := token.SignedString([]byte(context.Auth.Config.SignedString))
+	claims := claims.Claims{}
+	claims.Subject = "state"
+	signedToken := context.Auth.SessionStorer.SignedToken(&claims)
 
 	url := provider.OAuthConfig(context).AuthCodeURL(signedToken)
 	http.Redirect(context.Writer, context.Request, url, http.StatusFound)

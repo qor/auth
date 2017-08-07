@@ -12,9 +12,22 @@ import (
 
 // SessionStorerInterface session storer interface for Auth
 type SessionStorerInterface interface {
+	// Get get claims from request
 	Get(req *http.Request) (*claims.Claims, error)
+	// Update update claims with session manager
 	Update(claims *claims.Claims, req *http.Request) error
+	// Delete delete session
 	Delete(req *http.Request) error
+
+	// Flash add flash message to session data
+	Flash(req *http.Request, message session.Message) error
+	// Flashes returns a slice of flash messages from session data
+	Flashes(req *http.Request) []session.Message
+
+	// SignedToken generate signed token with Claims
+	SignedToken(claims *claims.Claims) string
+	// ValidateClaims validate auth token
+	ValidateClaims(tokenString string) (*claims.Claims, error)
 }
 
 // SessionStorer default session storer
@@ -34,7 +47,7 @@ func (sessionStorer *SessionStorer) Get(req *http.Request) (*claims.Claims, erro
 		tokenString = sessionStorer.SessionManager.Get(req, sessionStorer.SessionName)
 	}
 
-	return sessionStorer.Validate(tokenString)
+	return sessionStorer.ValidateClaims(tokenString)
 }
 
 // Update update claims with session manager
@@ -47,6 +60,16 @@ func (sessionStorer *SessionStorer) Delete(req *http.Request) error {
 	return nil
 }
 
+// Flash add flash message to session data
+func (sessionStorer *SessionStorer) Flash(req *http.Request, message session.Message) error {
+	return sessionStorer.SessionManager.Flash(req, message)
+}
+
+// Flashes returns a slice of flash messages from session data
+func (sessionStorer *SessionStorer) Flashes(req *http.Request) []session.Message {
+	return sessionStorer.SessionManager.Flashes(req)
+}
+
 // SignedToken generate signed token with Claims
 func (sessionStorer *SessionStorer) SignedToken(claims *claims.Claims) string {
 	token := jwt.NewWithClaims(sessionStorer.SigningMethod, claims)
@@ -55,8 +78,8 @@ func (sessionStorer *SessionStorer) SignedToken(claims *claims.Claims) string {
 	return signedToken
 }
 
-// Validate validate auth token
-func (sessionStorer *SessionStorer) Validate(tokenString string) (*claims.Claims, error) {
+// ValidateClaims validate auth token
+func (sessionStorer *SessionStorer) ValidateClaims(tokenString string) (*claims.Claims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &claims.Claims{}, func(token *jwt.Token) (interface{}, error) {
 		if token.Method != sessionStorer.SigningMethod {
 			return nil, fmt.Errorf("unexpected signing method")

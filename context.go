@@ -18,7 +18,7 @@ type Context struct {
 
 // Flashes get flash messages
 func (context Context) Flashes() []session.Message {
-	return context.SessionManager.Flashes(context.Request)
+	return context.Auth.SessionStorer.Flashes(context.Request)
 }
 
 // FormValue get form value with name
