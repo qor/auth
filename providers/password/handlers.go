@@ -29,6 +29,9 @@ var DefaultAuthorizeHandler = func(context *auth.Context) (*claims.Claims, error
 	}
 
 	if provider.Config.Confirmable && authInfo.ConfirmedAt == nil {
+		currentUser, _ := context.Auth.UserStorer.Get(authInfo.ToClaims(), context)
+		provider.Config.ConfirmMailer(authInfo.UID, context, authInfo.ToClaims(), currentUser)
+
 		return nil, ErrUnconfirmed
 	}
 
