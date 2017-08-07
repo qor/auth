@@ -70,7 +70,6 @@ var DefaultRegisterHandler = func(context *Context, register func(*Context) (*cl
 // DefaultLogoutHandler default logout behaviour
 var DefaultLogoutHandler = func(context *Context) {
 	// Clear auth session
-	context.SessionManager.Pop(context.Request, context.Auth.Config.SessionName)
-
+	context.SessionStorer.Delete(context.Request)
 	http.Redirect(context.Writer, context.Request, "/", http.StatusSeeOther)
 }

@@ -57,7 +57,7 @@ func (serveMux *serveMux) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 			return
 		case "logout":
 			// destroy login context
-			serveMux.Auth.Logout(w, req)
+			serveMux.Auth.LogoutHandler(context)
 			return
 		case "register":
 			// render register page

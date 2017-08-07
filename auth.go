@@ -1,11 +1,9 @@
 package auth
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	"strings"
-	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/jinzhu/gorm"
@@ -34,11 +32,6 @@ type Config struct {
 	SessionStorer     SessionStorerInterface
 	ViewPaths         []string
 
-	// The time you want the user will be remembered without asking for credentials.
-	// After this time the user will be blocked and will have to enter their credentials again.
-	// By default remember_for is 2.weeks.
-	RememberFor time.Duration
-
 	LoginHandler    func(*Context, func(*Context) (*claims.Claims, error))
 	RegisterHandler func(*Context, func(*Context) (*claims.Claims, error))
 	LogoutHandler   func(*Context)
@@ -48,10 +41,6 @@ type Config struct {
 func New(config *Config) *Auth {
 	if config == nil {
 		config = &Config{}
-	}
-
-	if config.SigningMethod == nil {
-		config.SigningMethod = jwt.SigningMethodHS256
 	}
 
 	if config.Render == nil {
@@ -86,12 +75,9 @@ func New(config *Config) *Auth {
 
 	if config.SessionStorer == nil {
 		config.SessionStorer = &SessionStorer{
-			SessionName: "_auth_session",
+			SessionName:   "_auth_session",
+			SigningMethod: jwt.SigningMethodHS256,
 		}
-	}
-
-	if config.RememberFor == 0 {
-		config.RememberFor = time.Hour * 24 * 14 // 2 weeks
 	}
 
 	for _, viewPath := range config.ViewPaths {
@@ -144,34 +130,4 @@ func (auth *Auth) GetProvider(name string) Provider {
 		}
 	}
 	return nil
-}
-
-// SignedToken generate signed token with Claims
-func (auth *Auth) SignedToken(claims *claims.Claims) string {
-	// Apply remember for
-	claims.ExpiresAt = time.Now().Add(auth.Config.RememberFor).Unix()
-
-	token := jwt.NewWithClaims(auth.SigningMethod, claims)
-	signedToken, _ := token.SignedString([]byte(auth.SignedString))
-
-	return signedToken
-}
-
-// Validate validate auth token
-func (auth *Auth) Validate(tokenString string) (*claims.Claims, error) {
-	token, err := jwt.ParseWithClaims(tokenString, &claims.Claims{}, func(token *jwt.Token) (interface{}, error) {
-		if token.Method != auth.Config.SigningMethod {
-			return nil, fmt.Errorf("unexpected signing method")
-		}
-		return []byte(auth.Config.SignedString), nil
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	if claims, ok := token.Claims.(*claims.Claims); ok && token.Valid {
-		return claims, nil
-	}
-	return nil, errors.New("invalid token")
 }
