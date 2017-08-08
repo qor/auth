@@ -12,7 +12,7 @@ func respondAfterLogged(claims *claims.Claims, context *Context) {
 
 	responder.With("html", func() {
 		// write cookie
-		context.Auth.SessionStorer.Redirect(context.Writer, context.Request, "login")
+		context.Auth.Redirector.Redirect(context.Writer, context.Request, "login")
 	}).With([]string{"json"}, func() {
 		// TODO write json token
 	}).Respond(context.Request)
@@ -69,5 +69,5 @@ var DefaultRegisterHandler = func(context *Context, register func(*Context) (*cl
 var DefaultLogoutHandler = func(context *Context) {
 	// Clear auth session
 	context.SessionStorer.Delete(context.Request)
-	context.Auth.SessionStorer.Redirect(context.Writer, context.Request, "logout")
+	context.Auth.Redirector.Redirect(context.Writer, context.Request, "logout")
 }

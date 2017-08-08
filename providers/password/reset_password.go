@@ -1,7 +1,6 @@
 package password
 
 import (
-	"net/http"
 	"net/mail"
 	"path"
 	"reflect"
@@ -78,8 +77,7 @@ var DefaultRecoverPasswordHandler = func(context *auth.Context) error {
 
 	if err == nil {
 		context.SessionStorer.Flash(context.Request, session.Message{Message: SendChangePasswordMailFlashMessage, Type: "success"})
-		http.Redirect(context.Writer, context.Request, "/", http.StatusSeeOther)
-		context.Auth.SessionStorer.Redirect(context.Writer, context.Request, "send_recover_password_mail")
+		context.Auth.Redirector.Redirect(context.Writer, context.Request, "send_recover_password_mail")
 	}
 	return err
 }
@@ -120,7 +118,7 @@ var DefaultResetPasswordHandler = func(context *auth.Context) error {
 
 	if err == nil {
 		context.SessionStorer.Flash(context.Request, session.Message{Message: ChangedPasswordFlashMessage, Type: "success"})
-		context.Auth.SessionStorer.Redirect(context.Writer, context.Request, "reset_password")
+		context.Auth.Redirector.Redirect(context.Writer, context.Request, "reset_password")
 	}
 	return err
 }

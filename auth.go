@@ -32,6 +32,7 @@ type Config struct {
 	Mailer        *mailer.Mailer
 	UserStorer    UserStorerInterface
 	SessionStorer SessionStorerInterface
+	Redirector    RedirectorInterface
 
 	LoginHandler    func(*Context, func(*Context) (*claims.Claims, error))
 	RegisterHandler func(*Context, func(*Context) (*claims.Claims, error))
@@ -58,14 +59,18 @@ func New(config *Config) *Auth {
 		config.AuthIdentityModel = &auth_identity.AuthIdentity{}
 	}
 
+	if config.Redirector == nil {
+		config.Redirector = &Redirector{redirect_back.New(&redirect_back.Config{
+			SessionManager:  manager.SessionManager,
+			IgnoredPrefixes: []string{config.URLPrefix},
+		})}
+	}
+
 	if config.SessionStorer == nil {
 		config.SessionStorer = &SessionStorer{
 			SessionName:    "_auth_session",
 			SessionManager: manager.SessionManager,
 			SigningMethod:  jwt.SigningMethodHS256,
-			Redirector: &redirector{redirect_back.New(&redirect_back.Config{
-				SessionManager: manager.SessionManager,
-			})},
 		}
 	}
 

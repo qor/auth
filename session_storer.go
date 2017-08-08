@@ -7,7 +7,6 @@ import (
 
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/qor/auth/claims"
-	"github.com/qor/redirect_back"
 	"github.com/qor/session"
 )
 
@@ -29,9 +28,6 @@ type SessionStorerInterface interface {
 	SignedToken(claims *claims.Claims) string
 	// ValidateClaims validate auth token
 	ValidateClaims(tokenString string) (*claims.Claims, error)
-
-	// Redirect redirect after action
-	Redirect(w http.ResponseWriter, req *http.Request, action string)
 }
 
 // SessionStorer default session storer
@@ -40,9 +36,6 @@ type SessionStorer struct {
 	SigningMethod  jwt.SigningMethod
 	SignedString   string
 	SessionManager session.ManagerInterface
-	Redirector     interface {
-		Redirect(w http.ResponseWriter, req *http.Request, action string)
-	}
 }
 
 // Get get claims from request
@@ -104,17 +97,4 @@ func (sessionStorer *SessionStorer) ValidateClaims(tokenString string) (*claims.
 		return claims, nil
 	}
 	return nil, errors.New("invalid token")
-}
-
-// Redirect redirect after action
-func (sessionStorer *SessionStorer) Redirect(w http.ResponseWriter, req *http.Request, action string) {
-	sessionStorer.Redirector.Redirect(w, req, action)
-}
-
-type redirector struct {
-	*redirect_back.RedirectBack
-}
-
-func (redirector *redirector) Redirect(w http.ResponseWriter, req *http.Request, action string) {
-	redirector.RedirectBack.RedirectBack(w, req)
 }

@@ -87,7 +87,7 @@ var DefaultConfirmHandler = func(context *auth.Context) error {
 					authInfo.ConfirmedAt = &now
 					if err = tx.Model(authIdentity).Update(authInfo).Error; err == nil {
 						context.SessionStorer.Flash(context.Request, session.Message{Message: ConfirmedAccountFlashMessage, Type: "success"})
-						context.Auth.SessionStorer.Redirect(context.Writer, context.Request, "confirm")
+						context.Auth.Redirector.Redirect(context.Writer, context.Request, "confirm")
 						return nil
 					}
 				}
