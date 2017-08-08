@@ -28,6 +28,9 @@ type SessionStorerInterface interface {
 	SignedToken(claims *claims.Claims) string
 	// ValidateClaims validate auth token
 	ValidateClaims(tokenString string) (*claims.Claims, error)
+
+	// RedirectBack redirect to last URL
+	RedirectBack(w http.ResponseWriter, req *http.Request)
 }
 
 // SessionStorer default session storer
@@ -36,6 +39,9 @@ type SessionStorer struct {
 	SigningMethod  jwt.SigningMethod
 	SignedString   string
 	SessionManager session.ManagerInterface
+	Redirector     interface {
+		RedirectBack(w http.ResponseWriter, req *http.Request)
+	}
 }
 
 // Get get claims from request
@@ -97,4 +103,9 @@ func (sessionStorer *SessionStorer) ValidateClaims(tokenString string) (*claims.
 		return claims, nil
 	}
 	return nil, errors.New("invalid token")
+}
+
+// RedirectBack redirect to last URL
+func (sessionStorer *SessionStorer) RedirectBack(w http.ResponseWriter, req *http.Request) {
+	sessionStorer.Redirector.RedirectBack(w, req)
 }

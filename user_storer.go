@@ -10,8 +10,8 @@ import (
 	"github.com/qor/qor/utils"
 )
 
-// Storer storer interface
-type Storer interface {
+// UserStorerInterface user storer interface
+type UserStorerInterface interface {
 	Save(schema *Schema, context *Context) (user interface{}, userID string, err error)
 	Get(claims *claims.Claims, context *Context) (user interface{}, err error)
 }

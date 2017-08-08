@@ -9,6 +9,7 @@ import (
 	"github.com/qor/auth/auth_identity"
 	"github.com/qor/auth/claims"
 	"github.com/qor/mailer"
+	"github.com/qor/redirect_back"
 	"github.com/qor/render"
 	"github.com/qor/session/manager"
 )
@@ -29,7 +30,7 @@ type Config struct {
 
 	Render        *render.Render
 	Mailer        *mailer.Mailer
-	UserStorer    Storer
+	UserStorer    UserStorerInterface
 	SessionStorer SessionStorerInterface
 
 	LoginHandler    func(*Context, func(*Context) (*claims.Claims, error))
@@ -62,6 +63,9 @@ func New(config *Config) *Auth {
 			SessionName:    "_auth_session",
 			SessionManager: manager.SessionManager,
 			SigningMethod:  jwt.SigningMethodHS256,
+			Redirector: redirect_back.New(&redirect_back.Config{
+				SessionManager: manager.SessionManager,
+			}),
 		}
 	}
 
