@@ -7,10 +7,10 @@ Auth is a modular authentication system for web development in Golang, it provid
 ```go
 import (
 	"github.com/qor/auth"
-	"github.com/qor/auth/password"
-	"github.com/qor/auth/oauth/github"
-	"github.com/qor/auth/oauth/google"
-	"github.com/qor/auth/phone"
+	"github.com/qor/auth/providers/password"
+	"github.com/qor/auth/providers/github"
+	"github.com/qor/auth/providers/google"
+	"github.com/qor/auth/providers/phone"
 )
 
 var Auth = auth.New(&auth.Config{
