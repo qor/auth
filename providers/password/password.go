@@ -113,7 +113,7 @@ func (provider Provider) Callback(context *auth.Context) {
 func (provider Provider) ServeHTTP(context *auth.Context) {
 	var (
 		req     = context.Request
-		reqPath = strings.TrimPrefix(req.URL.Path, context.Auth.Prefix)
+		reqPath = strings.TrimPrefix(req.URL.Path, context.Auth.URLPrefix)
 		paths   = strings.Split(reqPath, "/")
 	)
 

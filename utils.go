@@ -3,6 +3,7 @@ package auth
 import (
 	"net/http"
 
+	"github.com/jinzhu/gorm"
 	"github.com/qor/auth/claims"
 	"github.com/qor/qor/utils"
 )
@@ -25,6 +26,15 @@ func (auth *Auth) GetCurrentUser(req *http.Request) interface{} {
 	}
 
 	return nil
+}
+
+// GetDB get db from request
+func (auth *Auth) GetDB(request *http.Request) *gorm.DB {
+	db := request.Context().Value(utils.ContextDBName)
+	if tx, ok := db.(*gorm.DB); ok {
+		return tx
+	}
+	return auth.Config.DB
 }
 
 // Login sign user in

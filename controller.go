@@ -21,14 +21,13 @@ type serveMux struct {
 func (serveMux *serveMux) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	var (
 		claims  *claims.Claims
-		reqPath = strings.TrimPrefix(req.URL.Path, serveMux.Prefix)
+		reqPath = strings.TrimPrefix(req.URL.Path, serveMux.URLPrefix)
 		paths   = strings.Split(reqPath, "/")
 		context = &Context{Auth: serveMux.Auth, Claims: claims, Request: req, Writer: w}
 	)
 
 	if len(paths) >= 2 {
 		// eg: /phone/login
-
 		if provider := serveMux.Auth.GetProvider(paths[0]); provider != nil {
 			context.Provider = provider
 
@@ -49,19 +48,18 @@ func (serveMux *serveMux) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		}
 	} else if len(paths) == 1 {
 		// eg: /login, /logout
-
 		switch paths[0] {
 		case "login":
 			// render login page
 			serveMux.Auth.Render.Execute("auth/login", context, req, w)
 			return
-		case "logout":
-			// destroy login context
-			serveMux.Auth.LogoutHandler(context)
-			return
 		case "register":
 			// render register page
 			serveMux.Auth.Render.Execute("auth/register", context, req, w)
+			return
+		case "logout":
+			// destroy login context
+			serveMux.Auth.LogoutHandler(context)
 			return
 		}
 	}
@@ -71,5 +69,5 @@ func (serveMux *serveMux) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 // AuthURL generate URL for auth
 func (auth *Auth) AuthURL(pth string) string {
-	return path.Join(auth.Prefix, pth)
+	return path.Join(auth.URLPrefix, pth)
 }

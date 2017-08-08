@@ -16,7 +16,7 @@ func respondAfterLogged(claims *claims.Claims, context *Context) {
 		// write cookie
 		http.Redirect(context.Writer, context.Request, "/", http.StatusSeeOther)
 	}).With([]string{"json"}, func() {
-		// write json token
+		// TODO write json token
 	}).Respond(context.Request)
 }
 
@@ -40,7 +40,7 @@ var DefaultLoginHandler = func(context *Context, authorize func(*Context) (*clai
 	responder.With("html", func() {
 		context.Auth.Config.Render.Execute("auth/login", context, req, w)
 	}).With([]string{"json"}, func() {
-		// write json error
+		// TODO write json error
 	}).Respond(context.Request)
 }
 
@@ -63,7 +63,7 @@ var DefaultRegisterHandler = func(context *Context, register func(*Context) (*cl
 	responder.With("html", func() {
 		context.Auth.Config.Render.Execute("auth/register", context, req, w)
 	}).With([]string{"json"}, func() {
-		// write json error
+		// TODO write json error
 	}).Respond(context.Request)
 }
 
