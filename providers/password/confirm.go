@@ -3,7 +3,6 @@ package password
 import (
 	"errors"
 	"html/template"
-	"net/http"
 	"net/mail"
 	"path"
 	"reflect"
@@ -88,7 +87,7 @@ var DefaultConfirmHandler = func(context *auth.Context) error {
 					authInfo.ConfirmedAt = &now
 					if err = tx.Model(authIdentity).Update(authInfo).Error; err == nil {
 						context.SessionStorer.Flash(context.Request, session.Message{Message: ConfirmedAccountFlashMessage, Type: "success"})
-						http.Redirect(context.Writer, context.Request, "/", http.StatusSeeOther)
+						context.Auth.SessionStorer.Redirect(context.Writer, context.Request, "confirm")
 						return nil
 					}
 				}

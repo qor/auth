@@ -63,9 +63,9 @@ func New(config *Config) *Auth {
 			SessionName:    "_auth_session",
 			SessionManager: manager.SessionManager,
 			SigningMethod:  jwt.SigningMethodHS256,
-			Redirector: redirect_back.New(&redirect_back.Config{
+			Redirector: &redirector{redirect_back.New(&redirect_back.Config{
 				SessionManager: manager.SessionManager,
-			}),
+			})},
 		}
 	}
 

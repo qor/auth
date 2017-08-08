@@ -7,6 +7,7 @@ import (
 
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/qor/auth/claims"
+	"github.com/qor/redirect_back"
 	"github.com/qor/session"
 )
 
@@ -29,8 +30,8 @@ type SessionStorerInterface interface {
 	// ValidateClaims validate auth token
 	ValidateClaims(tokenString string) (*claims.Claims, error)
 
-	// RedirectBack redirect to last URL
-	RedirectBack(w http.ResponseWriter, req *http.Request)
+	// Redirect redirect after action
+	Redirect(w http.ResponseWriter, req *http.Request, action string)
 }
 
 // SessionStorer default session storer
@@ -40,7 +41,7 @@ type SessionStorer struct {
 	SignedString   string
 	SessionManager session.ManagerInterface
 	Redirector     interface {
-		RedirectBack(w http.ResponseWriter, req *http.Request)
+		Redirect(w http.ResponseWriter, req *http.Request, action string)
 	}
 }
 
@@ -105,7 +106,15 @@ func (sessionStorer *SessionStorer) ValidateClaims(tokenString string) (*claims.
 	return nil, errors.New("invalid token")
 }
 
-// RedirectBack redirect to last URL
-func (sessionStorer *SessionStorer) RedirectBack(w http.ResponseWriter, req *http.Request) {
-	sessionStorer.Redirector.RedirectBack(w, req)
+// Redirect redirect after action
+func (sessionStorer *SessionStorer) Redirect(w http.ResponseWriter, req *http.Request, action string) {
+	sessionStorer.Redirector.Redirect(w, req, action)
+}
+
+type redirector struct {
+	*redirect_back.RedirectBack
+}
+
+func (redirector *redirector) Redirect(w http.ResponseWriter, req *http.Request, action string) {
+	redirector.RedirectBack.RedirectBack(w, req)
 }

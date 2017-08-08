@@ -1,8 +1,6 @@
 package auth
 
 import (
-	"net/http"
-
 	"github.com/qor/auth/claims"
 	"github.com/qor/responder"
 	"github.com/qor/session"
@@ -14,7 +12,7 @@ func respondAfterLogged(claims *claims.Claims, context *Context) {
 
 	responder.With("html", func() {
 		// write cookie
-		http.Redirect(context.Writer, context.Request, "/", http.StatusSeeOther)
+		context.Auth.SessionStorer.Redirect(context.Writer, context.Request, "login")
 	}).With([]string{"json"}, func() {
 		// TODO write json token
 	}).Respond(context.Request)
@@ -71,5 +69,5 @@ var DefaultRegisterHandler = func(context *Context, register func(*Context) (*cl
 var DefaultLogoutHandler = func(context *Context) {
 	// Clear auth session
 	context.SessionStorer.Delete(context.Request)
-	http.Redirect(context.Writer, context.Request, "/", http.StatusSeeOther)
+	context.Auth.SessionStorer.Redirect(context.Writer, context.Request, "logout")
 }

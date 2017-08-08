@@ -148,7 +148,7 @@ func (provider Provider) ServeHTTP(context *auth.Context) {
 
 					if err == nil {
 						context.SessionStorer.Flash(req, session.Message{Message: ConfirmFlashMessage, Type: "success"})
-						http.Redirect(context.Writer, context.Request, "/", http.StatusSeeOther)
+						context.Auth.SessionStorer.Redirect(context.Writer, context.Request, "send_confirmation")
 					}
 				}
 			}
@@ -163,7 +163,7 @@ func (provider Provider) ServeHTTP(context *auth.Context) {
 			err := provider.ConfirmHandler(context)
 			if err != nil {
 				context.SessionStorer.Flash(req, session.Message{Message: err.Error(), Type: "error"})
-				http.Redirect(context.Writer, context.Request, "/", http.StatusSeeOther)
+				context.Auth.SessionStorer.Redirect(context.Writer, context.Request, "confirm_failed")
 				return
 			}
 		case "new":
