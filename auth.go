@@ -31,7 +31,7 @@ type Config struct {
 	UserModel interface{}
 	// Mount Auth into router with URLPrefix's value as prefix, default value is `/auth`.
 	URLPrefix string
-	// ViewPaths you could customize Auth's view by setting its ViewPaths
+	// ViewPaths prepend views paths for auth
 	ViewPaths []string
 
 	// Auth is using [Render](https://github.com/qor/render) to render pages, you could configure it with your project's Render if you have advanced usage like [BindataFS](https://github.com/qor/bindatafs)
