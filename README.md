@@ -2,13 +2,19 @@
 
 Auth is a modular authentication system for web development in Golang, it provides different authentication backends to accelerate your development.
 
-Currently Auth has database password, github, google authentication support, and it is easy to add other support based on [Auth's Provider interface](https://godoc.org/github.com/qor/auth#Provider)
+Currently Auth has database password, github, google authentication support, and it is fairly easy to add other support based on [Auth's Provider interface](https://godoc.org/github.com/qor/auth#Provider)
 
 ## Basic Usage
 
-Auth aims to provide a easy to use authentication system that don't need much developer's effort.
+Auth aims to provide a easy to use authentication system that don't require much developer's effort.
 
-To use it, firstly, you need to initialize Auth with configuration, register some providers, then register it into router, like:
+To use it, basic flow is:
+
+* Initialize Auth with configuration
+* Register some providers
+* Register it into router
+
+Here is an example:
 
 ```go
 import (
@@ -30,7 +36,8 @@ var (
 )
 
 func init() {
-	// Migrate AuthIdentity table
+	// Migrate AuthIdentity table, AuthIdentity table will be used to auth info, like username/password, oauth token.
+	// AuthIdentity is just a default model that will be used to save those information, you could change it if you want.
 	gormDB.AutoMigrate(&auth_identity.AuthIdentity{})
 
 	// Register Auth providers
@@ -56,4 +63,8 @@ func main() {
 }
 ```
 
-That's it, then you could goto `http://127.0.0.1:9000/auth/login` to try features Auth provides, like login, logout, register, forgot password...
+That's it, then you could goto `http://127.0.0.1:9000/auth/login` to try features Auth provides, like login, logout, register, forgot/change password...
+
+## Getting Started
+
+To reduce developer's effort, Auth has lots of conventions, lets start from Auth's [Config struct](http://godoc.org/github.com/qor/auth#Config) to explain them.
