@@ -9,6 +9,7 @@ import (
 	"github.com/qor/auth/auth_identity"
 	"github.com/qor/auth/claims"
 	"github.com/qor/mailer"
+	"github.com/qor/mailer/logger"
 	"github.com/qor/redirect_back"
 	"github.com/qor/render"
 	"github.com/qor/session/manager"
@@ -45,10 +46,6 @@ func New(config *Config) *Auth {
 		config = &Config{}
 	}
 
-	if config.Render == nil {
-		config.Render = render.New()
-	}
-
 	if config.URLPrefix == "" {
 		config.URLPrefix = "/auth/"
 	} else {
@@ -59,11 +56,18 @@ func New(config *Config) *Auth {
 		config.AuthIdentityModel = &auth_identity.AuthIdentity{}
 	}
 
-	if config.Redirector == nil {
-		config.Redirector = &Redirector{redirect_back.New(&redirect_back.Config{
-			SessionManager:  manager.SessionManager,
-			IgnoredPrefixes: []string{config.URLPrefix},
-		})}
+	if config.Render == nil {
+		config.Render = render.New()
+	}
+
+	if config.Mailer == nil {
+		config.Mailer = mailer.New(&mailer.Config{
+			Sender: logger.New(&logger.Config{}),
+		})
+	}
+
+	if config.UserStorer == nil {
+		config.UserStorer = &UserStorer{}
 	}
 
 	if config.SessionStorer == nil {
@@ -72,6 +76,13 @@ func New(config *Config) *Auth {
 			SessionManager: manager.SessionManager,
 			SigningMethod:  jwt.SigningMethodHS256,
 		}
+	}
+
+	if config.Redirector == nil {
+		config.Redirector = &Redirector{redirect_back.New(&redirect_back.Config{
+			SessionManager:  manager.SessionManager,
+			IgnoredPrefixes: []string{config.URLPrefix},
+		})}
 	}
 
 	if config.LoginHandler == nil {
@@ -84,10 +95,6 @@ func New(config *Config) *Auth {
 
 	if config.LogoutHandler == nil {
 		config.LogoutHandler = DefaultLogoutHandler
-	}
-
-	if config.UserStorer == nil {
-		config.UserStorer = &UserStorer{}
 	}
 
 	for _, viewPath := range config.ViewPaths {
