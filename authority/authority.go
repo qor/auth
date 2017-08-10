@@ -26,8 +26,9 @@ type AuthInterface interface {
 
 // Config authority config
 type Config struct {
-	Auth AuthInterface
-	Role *roles.Role
+	Auth                          AuthInterface
+	Role                          *roles.Role
+	RedirectPathAfterAccessDenied string
 }
 
 // New initialize Authority
@@ -42,6 +43,10 @@ func New(config *Config) *Authority {
 
 	if config.Role == nil {
 		config.Role = roles.Global
+	}
+
+	if config.RedirectPathAfterAccessDenied == "" {
+		config.RedirectPathAfterAccessDenied = "/"
 	}
 
 	return &Authority{Config: config}
@@ -62,7 +67,7 @@ func (authority *Authority) Restrict(roles ...string) func(http.Handler) http.Ha
 			}
 
 			authority.Auth.Flash(req, session.Message{Message: AccessDeniedFlashMessage})
-			http.Redirect(w, req, "/", http.StatusSeeOther)
+			http.Redirect(w, req, authority.Config.RedirectPathAfterAccessDenied, http.StatusSeeOther)
 		})
 	}
 }

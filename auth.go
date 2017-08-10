@@ -18,6 +18,8 @@ import (
 // Auth auth struct
 type Auth struct {
 	*Config
+	// Embed SessionStorer to match Authority's AuthInterface
+	SessionStorerInterface
 	providers []Provider
 }
 
@@ -117,6 +119,8 @@ func New(config *Config) *Auth {
 	config.Render.RegisterViewPath("github.com/qor/auth/views")
 
 	auth := &Auth{Config: config}
+
+	auth.SessionStorerInterface = config.SessionStorer
 
 	return auth
 }
