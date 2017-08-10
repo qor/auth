@@ -52,8 +52,8 @@ func New(config *Config) *Authority {
 	return &Authority{Config: config}
 }
 
-// Restrict restrict middleware
-func (authority *Authority) Restrict(roles ...string) func(http.Handler) http.Handler {
+// Authorize authorize specfied roles or authenticated user to access wrapped handler
+func (authority *Authority) Authorize(roles ...string) func(http.Handler) http.Handler {
 	return func(handler http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 			var currentUser interface{}
@@ -61,7 +61,7 @@ func (authority *Authority) Restrict(roles ...string) func(http.Handler) http.Ha
 			// Get current user from request
 			currentUser = authority.Auth.GetCurrentUser(req)
 
-			if authority.Role.HasRole(req, currentUser, roles...) {
+			if (len(roles) == 0 && currentUser != nil) || authority.Role.HasRole(req, currentUser, roles...) {
 				handler.ServeHTTP(w, req)
 				return
 			}
