@@ -14,19 +14,19 @@ Authority could use with [Auth](http://github.com/qor/auth) to get current user,
 
 ```go
 import (
-	"github.com/qor/auth"
-	"github.com/qor/auth/authority"
-	"github.com/qor/roles"
+  "github.com/qor/auth"
+  "github.com/qor/auth/authority"
+  "github.com/qor/roles"
 )
 
 func main() {
-	Auth := auth.New(&auth.Config{})
+  Auth := auth.New(&auth.Config{})
 
-	Authority := authority.New(&authority.Config{
-		Auth: Auth,
+  Authority := authority.New(&authority.Config{
+    Auth: Auth,
     Role: roles.Global, // default configuration
-		RedirectPathAfterAccessDenied: "/auth/login",
-	})
+    RedirectPathAfterAccessDenied: "/auth/login",
+  })
 }
 ```
 
@@ -36,7 +36,7 @@ Refer [Roles](http://github.com/qor/roles) for how to use roles to register role
 
 ```go
 roles.Register("admin", func(req *http.Request, currentUser interface{}) bool {
-	return req.RemoteAddr == "127.0.0.1" || (currentUser.(*User) != nil && currentUser.(*User).Role == "admin")
+  return req.RemoteAddr == "127.0.0.1" || (currentUser.(*User) != nil && currentUser.(*User).Role == "admin")
 })
 ```
 
@@ -61,15 +61,15 @@ Authority.Register("place_an_order", authority.Rule{
 
 ```go
 func main() {
-	mux := http.NewServeMux()
+  mux := http.NewServeMux()
 
   // Require current user has `access_account_pages` ability to acccess `AccountProfileHandler`
-	mux.Handle("/account/profile", Authority.Authorize("access_account_pages")(AccountProfileHandler))
+  mux.Handle("/account/profile", Authority.Authorize("access_account_pages")(AccountProfileHandler))
 
   // Any logged user could acccess `AccountProfileHandler` if no roles specfied
-	mux.Handle("/account/profile", Authority.Authorize()(AccountProfileHandler))
+  mux.Handle("/account/profile", Authority.Authorize()(AccountProfileHandler))
 
-	http.ListenAndServe(":9000", mux)
+  http.ListenAndServe(":9000", mux)
 }
 
 func AccountProfileHandler(w http.ResponseWriter, req *http.Request) {
