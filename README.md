@@ -145,3 +145,28 @@ BTW, to make it works correctly, `redirect_back` need to save last visisted URL 
 ```go
 http.ListenAndServe(":9000", manager.SessionManager.Middleware(RedirectBack.Middleware(mux)))
 ```
+
+## Advanced Usage
+
+### Auth Themes
+
+In order to save more developer's effort, we have created some [auth themes](https://github.com/qor/auth_themes).
+
+It usually has well designed pages, if you don't much custom requirements, you could just have few lines to make Auth system ready to use for your application, for example:
+
+```go
+import "github.com/qor/auth_themes/clean"
+
+var Auth = clean.New(&auth.Config{
+	DB:         db.DB,
+	Render:     config.View,
+	Mailer:     config.Mailer,
+	UserModel:  models.User{},
+})
+```
+
+### Authorization
+
+`Authentication` is the process of verifying who you are, `Authorization` is the process of verifying that you have access to something.
+
+Auth package not only provides `Authentication`, but also `Authorization`, please checkout [authority](https://github.com/qor/auth/tree/master/authority) for more details
