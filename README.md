@@ -18,51 +18,51 @@ Here is an example:
 
 ```go
 import (
-	"github.com/qor/auth"
-	"github.com/qor/auth/auth_identity"
-	"github.com/qor/auth/providers/github"
-	"github.com/qor/auth/providers/google"
-	"github.com/qor/auth/providers/password"
-	"github.com/qor/session/manager"
+  "github.com/qor/auth"
+  "github.com/qor/auth/auth_identity"
+  "github.com/qor/auth/providers/github"
+  "github.com/qor/auth/providers/google"
+  "github.com/qor/auth/providers/password"
+  "github.com/qor/session/manager"
 )
 
 var (
-	// Initialize gorm DB
-	gormDB, _ = gorm.Open("sqlite3", "sample.db")
+  // Initialize gorm DB
+  gormDB, _ = gorm.Open("sqlite3", "sample.db")
 
-	// Initialize Auth with configuration
-	Auth = auth.New(&auth.Config{
-		DB: gormDB,
-	})
+  // Initialize Auth with configuration
+  Auth = auth.New(&auth.Config{
+    DB: gormDB,
+  })
 )
 
 func init() {
-	// Migrate AuthIdentity model, AuthIdentity will be used to save auth info, like username/password, oauth token, you could change that.
-	gormDB.AutoMigrate(&auth_identity.AuthIdentity{})
+  // Migrate AuthIdentity model, AuthIdentity will be used to save auth info, like username/password, oauth token, you could change that.
+  gormDB.AutoMigrate(&auth_identity.AuthIdentity{})
 
-	// Register Auth providers
+  // Register Auth providers
   // Allow use username/password
-	Auth.RegisterProvider(password.New(&password.Config{}))
+  Auth.RegisterProvider(password.New(&password.Config{}))
 
   // Allow use Github
-	Auth.RegisterProvider(github.New(&github.Config{
-		ClientID:     "github client id",
-		ClientSecret: "github client secret",
-	}))
+  Auth.RegisterProvider(github.New(&github.Config{
+    ClientID:     "github client id",
+    ClientSecret: "github client secret",
+  }))
 
   // Allow use Google
-	Auth.RegisterProvider(google.New(&google.Config{
-		ClientID:     "google client id",
-		ClientSecret: "google client secret",
-	}))
+  Auth.RegisterProvider(google.New(&google.Config{
+    ClientID:     "google client id",
+    ClientSecret: "google client secret",
+  }))
 }
 
 func main() {
-	mux := http.NewServeMux()
+  mux := http.NewServeMux()
 
-	// Mount Auth to Router
-	mux.Handle("/auth/", Auth.NewServeMux())
-	http.ListenAndServe(":9000", manager.SessionManager.Middleware(mux))
+  // Mount Auth to Router
+  mux.Handle("/auth/", Auth.NewServeMux())
+  http.ListenAndServe(":9000", manager.SessionManager.Middleware(mux))
 }
 ```
 
