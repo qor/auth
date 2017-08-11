@@ -1,6 +1,7 @@
 package authority
 
 import (
+	"html/template"
 	"net/http"
 
 	"github.com/qor/auth"
@@ -10,7 +11,7 @@ import (
 
 var (
 	// AccessDeniedFlashMessage access denied message
-	AccessDeniedFlashMessage = "Access Denied!"
+	AccessDeniedFlashMessage = template.HTML("Access Denied!")
 )
 
 // Authority authority struct

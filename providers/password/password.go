@@ -154,7 +154,7 @@ func (provider Provider) ServeHTTP(context *auth.Context) {
 			}
 
 			if err != nil {
-				context.SessionStorer.Flash(req, session.Message{Message: err.Error(), Type: "error"})
+				context.SessionStorer.Flash(req, session.Message{Message: template.HTML(err.Error()), Type: "error"})
 			}
 			// render new confirmation page
 			context.Auth.Config.Render.Execute("auth/confirmation/new", context, context.Request, context.Writer)
@@ -162,7 +162,7 @@ func (provider Provider) ServeHTTP(context *auth.Context) {
 			// confirm user
 			err := provider.ConfirmHandler(context)
 			if err != nil {
-				context.SessionStorer.Flash(req, session.Message{Message: err.Error(), Type: "error"})
+				context.SessionStorer.Flash(req, session.Message{Message: template.HTML(err.Error()), Type: "error"})
 				context.Auth.Redirector.Redirect(context.Writer, context.Request, "confirm_failed")
 				return
 			}
@@ -173,7 +173,7 @@ func (provider Provider) ServeHTTP(context *auth.Context) {
 			// send recover password mail
 			err := provider.RecoverPasswordHandler(context)
 			if err != nil {
-				context.SessionStorer.Flash(req, session.Message{Message: err.Error(), Type: "error"})
+				context.SessionStorer.Flash(req, session.Message{Message: template.HTML(err.Error()), Type: "error"})
 				http.Redirect(context.Writer, context.Request, context.Auth.AuthURL("password/new"), http.StatusSeeOther)
 				return
 			}
@@ -185,13 +185,13 @@ func (provider Provider) ServeHTTP(context *auth.Context) {
 				}).Execute("auth/password/edit", context, context.Request, context.Writer)
 				return
 			}
-			context.SessionStorer.Flash(req, session.Message{Message: ErrInvalidResetPasswordToken.Error(), Type: "error"})
+			context.SessionStorer.Flash(req, session.Message{Message: template.HTML(ErrInvalidResetPasswordToken.Error()), Type: "error"})
 			http.Redirect(context.Writer, context.Request, context.Auth.AuthURL("password/new"), http.StatusSeeOther)
 		case "update":
 			// update password
 			err := provider.ResetPasswordHandler(context)
 			if err != nil {
-				context.SessionStorer.Flash(req, session.Message{Message: err.Error(), Type: "error"})
+				context.SessionStorer.Flash(req, session.Message{Message: template.HTML(err.Error()), Type: "error"})
 				http.Redirect(context.Writer, context.Request, context.Auth.AuthURL("password/new"), http.StatusSeeOther)
 				return
 			}

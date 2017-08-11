@@ -1,6 +1,8 @@
 package auth
 
 import (
+	"html/template"
+
 	"github.com/qor/auth/claims"
 	"github.com/qor/responder"
 	"github.com/qor/session"
@@ -32,7 +34,7 @@ var DefaultLoginHandler = func(context *Context, authorize func(*Context) (*clai
 		return
 	}
 
-	context.SessionStorer.Flash(req, session.Message{Message: err.Error(), Type: "error"})
+	context.SessionStorer.Flash(req, session.Message{Message: template.HTML(err.Error()), Type: "error"})
 
 	// error handling
 	responder.With("html", func() {
@@ -55,7 +57,7 @@ var DefaultRegisterHandler = func(context *Context, register func(*Context) (*cl
 		return
 	}
 
-	context.SessionStorer.Flash(req, session.Message{Message: err.Error(), Type: "error"})
+	context.SessionStorer.Flash(req, session.Message{Message: template.HTML(err.Error()), Type: "error"})
 
 	// error handling
 	responder.With("html", func() {

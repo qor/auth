@@ -22,10 +22,10 @@ var (
 	ResetPasswordMailSubject = "Reset your password"
 
 	// SendChangePasswordMailFlashMessage send change password mail flash message
-	SendChangePasswordMailFlashMessage = "You will receive an email with instructions on how to reset your password in a few minutes"
+	SendChangePasswordMailFlashMessage = template.HTML("You will receive an email with instructions on how to reset your password in a few minutes")
 
 	// ChangedPasswordFlashMessage changed password success flash message
-	ChangedPasswordFlashMessage = "Changed your password!"
+	ChangedPasswordFlashMessage = template.HTML("Changed your password!")
 )
 
 // DefaultResetPasswordMailer default reset password mailer
