@@ -27,6 +27,12 @@ func (serveMux *serveMux) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	)
 
 	if len(paths) >= 2 {
+		// render assets
+		if paths[0] == "assets" {
+			DefaultAssetHandler(context)
+			return
+		}
+
 		// eg: /phone/login
 		if provider := serveMux.Auth.GetProvider(paths[0]); provider != nil {
 			context.Provider = provider
@@ -52,16 +58,16 @@ func (serveMux *serveMux) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		case "login":
 			// render login page
 			serveMux.Auth.Render.Execute("auth/login", context, req, w)
-			return
 		case "register":
 			// render register page
 			serveMux.Auth.Render.Execute("auth/register", context, req, w)
-			return
 		case "logout":
 			// destroy login context
 			serveMux.Auth.LogoutHandler(context)
-			return
+		default:
+			http.NotFound(w, req)
 		}
+		return
 	}
 
 	http.NotFound(w, req)

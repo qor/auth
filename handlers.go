@@ -1,7 +1,15 @@
 package auth
 
 import (
+	"crypto/md5"
+	"fmt"
 	"html/template"
+	"mime"
+	"net/http"
+	"path"
+	"path/filepath"
+	"strings"
+	"time"
 
 	"github.com/qor/auth/claims"
 	"github.com/qor/responder"
@@ -72,4 +80,35 @@ var DefaultLogoutHandler = func(context *Context) {
 	// Clear auth session
 	context.SessionStorer.Delete(context.Request)
 	context.Auth.Redirector.Redirect(context.Writer, context.Request, "logout")
+}
+
+var cacheSince = time.Now().Format(http.TimeFormat)
+
+// DefaultAssetHandler render auth asset file
+var DefaultAssetHandler = func(context *Context) {
+	asset := strings.TrimPrefix(context.Request.URL.Path, context.Auth.URLPrefix)
+
+	if context.Request.Header.Get("If-Modified-Since") == cacheSince {
+		context.Writer.WriteHeader(http.StatusNotModified)
+		return
+	}
+	context.Writer.Header().Set("Last-Modified", cacheSince)
+
+	if content, err := context.Config.Render.Asset(path.Join("/auth", asset)); err == nil {
+		etag := fmt.Sprintf("%x", md5.Sum(content))
+		if context.Request.Header.Get("If-None-Match") == etag {
+			context.Writer.WriteHeader(http.StatusNotModified)
+			return
+		}
+
+		if ctype := mime.TypeByExtension(filepath.Ext(asset)); ctype != "" {
+			context.Writer.Header().Set("Content-Type", ctype)
+		}
+
+		context.Writer.Header().Set("Cache-control", "private, must-revalidate, max-age=300")
+		context.Writer.Header().Set("ETag", etag)
+		context.Writer.Write(content)
+	} else {
+		http.NotFound(context.Writer, context.Request)
+	}
 }
