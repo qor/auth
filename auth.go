@@ -72,7 +72,7 @@ func New(config *Config) *Auth {
 	}
 
 	if config.Render == nil {
-		config.Render = render.New()
+		config.Render = render.New(nil)
 	}
 
 	if config.Mailer == nil {
