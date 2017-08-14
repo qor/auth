@@ -165,6 +165,8 @@ var Auth = clean.New(&auth.Config{
 })
 ```
 
+Check Auth Theme's [document](https://github.com/qor/auth_themes) for How To use/create Auth themes
+
 ### Authorization
 
 `Authentication` is the process of verifying who you are, `Authorization` is the process of verifying that you have access to something.
