@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/qor/auth/claims"
 	"github.com/qor/roles"
 )
 
@@ -17,7 +18,7 @@ type Rule struct {
 // Handler generate roles checker
 func (authority Authority) Handler(rule Rule) roles.Checker {
 	return func(req *http.Request, user interface{}) bool {
-		claims, _ := authority.Auth.Get(req)
+		claims, _ := req.Context().Value(ClaimsContextKey).(claims.Claims)
 
 		// Check Last Auth
 		if rule.TimeoutSinceLastAuth > 0 {
