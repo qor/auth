@@ -20,14 +20,14 @@ func (authority Authority) Handler(rule Rule) roles.Checker {
 
 		// Check Last Auth
 		if rule.TimeoutSinceLastLogin > 0 {
-			if claims.LastLoginAt == nil || time.Now().Add(-rule.TimeoutSinceLastLogin).After(*claims.LastLoginAt) {
+			if claims == nil || claims.LastLoginAt == nil || time.Now().Add(-rule.TimeoutSinceLastLogin).After(*claims.LastLoginAt) {
 				return false
 			}
 		}
 
 		// Check Distraction
 		if rule.LongestDistractionSinceLastLogin > 0 {
-			if claims.LongestDistractionSinceLastLogin == nil || *claims.LongestDistractionSinceLastLogin > rule.LongestDistractionSinceLastLogin {
+			if claims == nil || claims.LongestDistractionSinceLastLogin == nil || *claims.LongestDistractionSinceLastLogin > rule.LongestDistractionSinceLastLogin {
 				return false
 			}
 		}
