@@ -10,9 +10,9 @@ import (
 
 // Rule authority rule's definition
 type Rule struct {
-	TimeoutSinceLastAuth   time.Duration
-	TimeoutSinceLastActive time.Duration
-	LoggedAs               []string
+	TimeoutSinceLastLogin            time.Duration
+	TimeoutSinceLastActive           time.Duration
+	LongestDistractionSinceLastLogin time.Duration
 }
 
 // Handler generate roles checker
@@ -21,30 +21,24 @@ func (authority Authority) Handler(rule Rule) roles.Checker {
 		claims, _ := req.Context().Value(ClaimsContextKey).(claims.Claims)
 
 		// Check Last Auth
-		if rule.TimeoutSinceLastAuth > 0 {
-			if claims.LastAuthTime == nil || time.Now().Add(-rule.TimeoutSinceLastAuth).After(*claims.LastAuthTime) {
+		if rule.TimeoutSinceLastLogin > 0 {
+			if claims.LastLoginAt == nil || time.Now().Add(-rule.TimeoutSinceLastLogin).After(*claims.LastLoginAt) {
 				return false
 			}
 		}
 
 		// Check Last Active
 		if rule.TimeoutSinceLastActive > 0 {
-			if claims.LastActivityTime == nil || time.Now().Add(-rule.TimeoutSinceLastActive).After(*claims.LastActivityTime) {
+			if claims.LastActiveAt == nil || time.Now().Add(-rule.TimeoutSinceLastActive).After(*claims.LastActiveAt) {
 				return false
 			}
 		}
 
-		// Check LoggedAs
-		if len(rule.LoggedAs) > 0 {
-			for _, as := range rule.LoggedAs {
-				for _, cas := range claims.LoggedAs {
-					if as == cas {
-						return true
-					}
-				}
+		// Check Distraction
+		if rule.LongestDistractionSinceLastLogin > 0 {
+			if claims.LongestDistractionSinceLastLogin == nil || *claims.LongestDistractionSinceLastLogin < rule.LongestDistractionSinceLastLogin {
+				return false
 			}
-
-			return false
 		}
 
 		return true

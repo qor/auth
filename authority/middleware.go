@@ -19,17 +19,17 @@ func (authority *Authority) Middleware(handler http.Handler) http.Handler {
 		if claims, err := authority.Auth.Get(req); err == nil {
 			reqClaims = *claims
 
-			lastActivityTime := claims.LastActivityTime
-			if lastActivityTime != nil {
-				lastDistractionTime := time.Now().Sub(*lastActivityTime)
+			lastActiveAt := claims.LastActiveAt
+			if lastActiveAt != nil {
+				lastDistractionTime := time.Now().Sub(*lastActiveAt)
 
-				if claims.LongestDistractionTimeSinceLastLogin == nil || *claims.LongestDistractionTimeSinceLastLogin < lastDistractionTime {
-					claims.LongestDistractionTimeSinceLastLogin = &lastDistractionTime
+				if claims.LongestDistractionSinceLastLogin == nil || *claims.LongestDistractionSinceLastLogin < lastDistractionTime {
+					claims.LongestDistractionSinceLastLogin = &lastDistractionTime
 				}
 			}
 
 			now := time.Now()
-			claims.LastActivityTime = &now
+			claims.LastActiveAt = &now
 
 			authority.Auth.Update(claims, req)
 		}

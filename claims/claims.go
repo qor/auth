@@ -8,12 +8,11 @@ import (
 
 // Claims auth claims
 type Claims struct {
-	Provider                             string         `json:"provider,omitempty"`
-	UserID                               string         `json:"userid,omitempty"`
-	LastAuthTime                         *time.Time     `json:"auth_time,omitempty"`
-	LastActivityTime                     *time.Time     `json:"activity_time,omitempty"`
-	LongestDistractionTimeSinceLastLogin *time.Duration `json:"longest_distraction,omitempty"`
-	LoggedAs                             []string       `json:"logged_as,omitempty"`
+	Provider                         string         `json:"provider,omitempty"`
+	UserID                           string         `json:"userid,omitempty"`
+	LastLoginAt                      *time.Time     `json:"last_login,omitempty"`
+	LastActiveAt                     *time.Time     `json:"last_active,omitempty"`
+	LongestDistractionSinceLastLogin *time.Duration `json:"distraction_time,omitempty"`
 	jwt.StandardClaims
 }
 
