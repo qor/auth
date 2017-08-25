@@ -22,9 +22,17 @@ func (authority *Authority) Middleware(handler http.Handler) http.Handler {
 			lastActiveAt := claims.LastActiveAt
 			if lastActiveAt != nil {
 				lastDistractionTime := time.Now().Sub(*lastActiveAt)
-
 				if claims.LongestDistractionSinceLastLogin == nil || *claims.LongestDistractionSinceLastLogin < lastDistractionTime {
 					claims.LongestDistractionSinceLastLogin = &lastDistractionTime
+				}
+
+				if claims.LastLoginAt != nil {
+					if claims.LastLoginAt.After(*claims.LastActiveAt) {
+						var zero time.Duration
+						claims.LongestDistractionSinceLastLogin = &zero
+					} else if loggedDuration := claims.LastActiveAt.Sub(*claims.LastLoginAt); *claims.LongestDistractionSinceLastLogin > loggedDuration {
+						claims.LongestDistractionSinceLastLogin = &loggedDuration
+					}
 				}
 			}
 

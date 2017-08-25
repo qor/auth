@@ -2,6 +2,7 @@ package auth
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/jinzhu/gorm"
 	"github.com/qor/auth/claims"
@@ -39,7 +40,11 @@ func (auth *Auth) GetDB(request *http.Request) *gorm.DB {
 
 // Login sign user in
 func (auth *Auth) Login(claimer claims.ClaimerInterface, req *http.Request) error {
-	return auth.SessionStorer.Update(claimer.ToClaims(), req)
+	claims := claimer.ToClaims()
+	now := time.Now()
+	claims.LastLoginAt = &now
+
+	return auth.SessionStorer.Update(claims, req)
 }
 
 // Logout sign current user out
