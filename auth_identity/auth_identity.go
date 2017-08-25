@@ -17,7 +17,7 @@ type AuthIdentity struct {
 // Basic basic information about auth identity
 type Basic struct {
 	Provider          string // phone, email, wechat, github...
-	UID               string
+	UID               string `gorm:"column:uid"`
 	EncryptedPassword string
 	UserID            string
 	ConfirmedAt       *time.Time
