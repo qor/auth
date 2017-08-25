@@ -1,11 +1,9 @@
 package authority
 
 import (
-	"context"
 	"net/http"
 	"time"
 
-	"github.com/qor/auth/claims"
 	"github.com/qor/qor/utils"
 )
 
@@ -15,9 +13,8 @@ var ClaimsContextKey utils.ContextKey = "authority_claims"
 // Middleware authority middleware used to record activity time
 func (authority *Authority) Middleware(handler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		var reqClaims claims.Claims
 		if claims, err := authority.Auth.Get(req); err == nil {
-			reqClaims = *claims
+			var zero time.Duration
 
 			lastActiveAt := claims.LastActiveAt
 			if lastActiveAt != nil {
@@ -28,12 +25,13 @@ func (authority *Authority) Middleware(handler http.Handler) http.Handler {
 
 				if claims.LastLoginAt != nil {
 					if claims.LastLoginAt.After(*claims.LastActiveAt) {
-						var zero time.Duration
 						claims.LongestDistractionSinceLastLogin = &zero
 					} else if loggedDuration := claims.LastActiveAt.Sub(*claims.LastLoginAt); *claims.LongestDistractionSinceLastLogin > loggedDuration {
 						claims.LongestDistractionSinceLastLogin = &loggedDuration
 					}
 				}
+			} else {
+				claims.LongestDistractionSinceLastLogin = &zero
 			}
 
 			now := time.Now()
@@ -42,7 +40,6 @@ func (authority *Authority) Middleware(handler http.Handler) http.Handler {
 			authority.Auth.Update(claims, req)
 		}
 
-		ctx := context.WithValue(req.Context(), ClaimsContextKey, reqClaims)
-		handler.ServeHTTP(w, req.WithContext(ctx))
+		handler.ServeHTTP(w, req)
 	})
 }

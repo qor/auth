@@ -4,21 +4,19 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/qor/auth/claims"
 	"github.com/qor/roles"
 )
 
 // Rule authority rule's definition
 type Rule struct {
 	TimeoutSinceLastLogin            time.Duration
-	TimeoutSinceLastActive           time.Duration
 	LongestDistractionSinceLastLogin time.Duration
 }
 
 // Handler generate roles checker
 func (authority Authority) Handler(rule Rule) roles.Checker {
 	return func(req *http.Request, user interface{}) bool {
-		claims, _ := req.Context().Value(ClaimsContextKey).(claims.Claims)
+		claims, _ := authority.Auth.Get(req)
 
 		// Check Last Auth
 		if rule.TimeoutSinceLastLogin > 0 {
@@ -27,16 +25,9 @@ func (authority Authority) Handler(rule Rule) roles.Checker {
 			}
 		}
 
-		// Check Last Active
-		if rule.TimeoutSinceLastActive > 0 {
-			if claims.LastActiveAt == nil || time.Now().Add(-rule.TimeoutSinceLastActive).After(*claims.LastActiveAt) {
-				return false
-			}
-		}
-
 		// Check Distraction
 		if rule.LongestDistractionSinceLastLogin > 0 {
-			if claims.LongestDistractionSinceLastLogin == nil || *claims.LongestDistractionSinceLastLogin < rule.LongestDistractionSinceLastLogin {
+			if claims.LongestDistractionSinceLastLogin == nil || *claims.LongestDistractionSinceLastLogin > rule.LongestDistractionSinceLastLogin {
 				return false
 			}
 		}
