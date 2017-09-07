@@ -25,7 +25,9 @@ func main() {
   Authority := authority.New(&authority.Config{
     Auth: Auth,
     Role: roles.Global, // default configuration
-    RedirectPathAfterAccessDenied: "/auth/login",
+    AccessDeniedHandler: func(w http.ResponseWriter, req *http.Request) { // redirect to home page by default
+      http.Redirect(w, req, "/", http.StatusSeeOther)
+    },
   })
 }
 ```
