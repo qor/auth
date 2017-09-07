@@ -37,7 +37,7 @@ func (authority *Authority) Middleware(handler http.Handler) http.Handler {
 			now := time.Now()
 			claims.LastActiveAt = &now
 
-			authority.Auth.Update(claims, req)
+			authority.Auth.Update(w, req, claims)
 		}
 
 		handler.ServeHTTP(w, req)

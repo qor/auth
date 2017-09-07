@@ -76,7 +76,7 @@ var DefaultRecoverPasswordHandler = func(context *auth.Context) error {
 	err = provider.ResetPasswordMailer(email, context, authInfo.ToClaims(), currentUser)
 
 	if err == nil {
-		context.SessionStorer.Flash(context.Request, session.Message{Message: SendChangePasswordMailFlashMessage, Type: "success"})
+		context.SessionStorer.Flash(context.Writer, context.Request, session.Message{Message: SendChangePasswordMailFlashMessage, Type: "success"})
 		context.Auth.Redirector.Redirect(context.Writer, context.Request, "send_recover_password_mail")
 	}
 	return err
@@ -117,7 +117,7 @@ var DefaultResetPasswordHandler = func(context *auth.Context) error {
 	}
 
 	if err == nil {
-		context.SessionStorer.Flash(context.Request, session.Message{Message: ChangedPasswordFlashMessage, Type: "success"})
+		context.SessionStorer.Flash(context.Writer, context.Request, session.Message{Message: ChangedPasswordFlashMessage, Type: "success"})
 		context.Auth.Redirector.Redirect(context.Writer, context.Request, "reset_password")
 	}
 	return err

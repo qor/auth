@@ -77,7 +77,7 @@ func (authority *Authority) Authorize(roles ...string) func(http.Handler) http.H
 				return
 			}
 
-			authority.Auth.Flash(req, session.Message{Message: AccessDeniedFlashMessage})
+			authority.Auth.Flash(w, req, session.Message{Message: AccessDeniedFlashMessage})
 			http.Redirect(w, req, authority.Config.RedirectPathAfterAccessDenied, http.StatusSeeOther)
 		})
 	}
