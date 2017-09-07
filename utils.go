@@ -39,15 +39,15 @@ func (auth *Auth) GetDB(request *http.Request) *gorm.DB {
 }
 
 // Login sign user in
-func (auth *Auth) Login(claimer claims.ClaimerInterface, req *http.Request) error {
+func (auth *Auth) Login(w http.ResponseWriter, req *http.Request, claimer claims.ClaimerInterface) error {
 	claims := claimer.ToClaims()
 	now := time.Now()
 	claims.LastLoginAt = &now
 
-	return auth.SessionStorer.Update(claims, req)
+	return auth.SessionStorer.Update(w, req, claims)
 }
 
 // Logout sign current user out
 func (auth *Auth) Logout(w http.ResponseWriter, req *http.Request) {
-	auth.SessionStorer.Delete(req)
+	auth.SessionStorer.Delete(w, req)
 }

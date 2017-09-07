@@ -15,14 +15,14 @@ type SessionStorerInterface interface {
 	// Get get claims from request
 	Get(req *http.Request) (*claims.Claims, error)
 	// Update update claims with session manager
-	Update(claims *claims.Claims, req *http.Request) error
+	Update(w http.ResponseWriter, req *http.Request, claims *claims.Claims) error
 	// Delete delete session
-	Delete(req *http.Request) error
+	Delete(w http.ResponseWriter, req *http.Request) error
 
 	// Flash add flash message to session data
-	Flash(req *http.Request, message session.Message) error
+	Flash(w http.ResponseWriter, req *http.Request, message session.Message) error
 	// Flashes returns a slice of flash messages from session data
-	Flashes(req *http.Request) []session.Message
+	Flashes(w http.ResponseWriter, req *http.Request) []session.Message
 
 	// SignedToken generate signed token with Claims
 	SignedToken(claims *claims.Claims) string
@@ -51,25 +51,25 @@ func (sessionStorer *SessionStorer) Get(req *http.Request) (*claims.Claims, erro
 }
 
 // Update update claims with session manager
-func (sessionStorer *SessionStorer) Update(claims *claims.Claims, req *http.Request) error {
+func (sessionStorer *SessionStorer) Update(w http.ResponseWriter, req *http.Request, claims *claims.Claims) error {
 	token := sessionStorer.SignedToken(claims)
-	return sessionStorer.SessionManager.Add(req, sessionStorer.SessionName, token)
+	return sessionStorer.SessionManager.Add(w, req, sessionStorer.SessionName, token)
 }
 
 // Delete delete claims from session manager
-func (sessionStorer *SessionStorer) Delete(req *http.Request) error {
-	sessionStorer.SessionManager.Pop(req, sessionStorer.SessionName)
+func (sessionStorer *SessionStorer) Delete(w http.ResponseWriter, req *http.Request) error {
+	sessionStorer.SessionManager.Pop(w, req, sessionStorer.SessionName)
 	return nil
 }
 
 // Flash add flash message to session data
-func (sessionStorer *SessionStorer) Flash(req *http.Request, message session.Message) error {
-	return sessionStorer.SessionManager.Flash(req, message)
+func (sessionStorer *SessionStorer) Flash(w http.ResponseWriter, req *http.Request, message session.Message) error {
+	return sessionStorer.SessionManager.Flash(w, req, message)
 }
 
 // Flashes returns a slice of flash messages from session data
-func (sessionStorer *SessionStorer) Flashes(req *http.Request) []session.Message {
-	return sessionStorer.SessionManager.Flashes(req)
+func (sessionStorer *SessionStorer) Flashes(w http.ResponseWriter, req *http.Request) []session.Message {
+	return sessionStorer.SessionManager.Flashes(w, req)
 }
 
 // SignedToken generate signed token with Claims

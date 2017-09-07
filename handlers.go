@@ -18,7 +18,7 @@ import (
 
 func respondAfterLogged(claims *claims.Claims, context *Context) {
 	// login user
-	context.Auth.Login(claims, context.Request)
+	context.Auth.Login(context.Writer, context.Request, claims)
 
 	responder.With("html", func() {
 		// write cookie
@@ -37,12 +37,12 @@ var DefaultLoginHandler = func(context *Context, authorize func(*Context) (*clai
 	)
 
 	if err == nil && claims != nil {
-		context.SessionStorer.Flash(req, session.Message{Message: "logged"})
+		context.SessionStorer.Flash(w, req, session.Message{Message: "logged"})
 		respondAfterLogged(claims, context)
 		return
 	}
 
-	context.SessionStorer.Flash(req, session.Message{Message: template.HTML(err.Error()), Type: "error"})
+	context.SessionStorer.Flash(w, req, session.Message{Message: template.HTML(err.Error()), Type: "error"})
 
 	// error handling
 	responder.With("html", func() {
@@ -65,7 +65,7 @@ var DefaultRegisterHandler = func(context *Context, register func(*Context) (*cl
 		return
 	}
 
-	context.SessionStorer.Flash(req, session.Message{Message: template.HTML(err.Error()), Type: "error"})
+	context.SessionStorer.Flash(w, req, session.Message{Message: template.HTML(err.Error()), Type: "error"})
 
 	// error handling
 	responder.With("html", func() {
@@ -78,7 +78,7 @@ var DefaultRegisterHandler = func(context *Context, register func(*Context) (*cl
 // DefaultLogoutHandler default logout behaviour
 var DefaultLogoutHandler = func(context *Context) {
 	// Clear auth session
-	context.SessionStorer.Delete(context.Request)
+	context.SessionStorer.Delete(context.Writer, context.Request)
 	context.Auth.Redirector.Redirect(context.Writer, context.Request, "logout")
 }
 
