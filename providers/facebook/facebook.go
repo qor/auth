@@ -27,6 +27,7 @@ type Config struct {
 	ClientID         string
 	ClientSecret     string
 	AuthorizeURL     string
+	RedirectURL      string
 	TokenURL         string
 	AuthorizeHandler func(context *auth.Context) (*claims.Claims, error)
 }
@@ -150,6 +151,7 @@ func (provider FacebookProvider) OAuthConfig(context *auth.Context) *oauth2.Conf
 	return &oauth2.Config{
 		ClientID:     config.ClientID,
 		ClientSecret: config.ClientSecret,
+		RedirectURL:  scheme + context.Request.Host + context.Auth.AuthURL("facebook/callback"),
 		Endpoint: oauth2.Endpoint{
 			AuthURL:  config.AuthorizeURL,
 			TokenURL: config.TokenURL,
