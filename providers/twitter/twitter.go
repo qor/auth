@@ -16,7 +16,7 @@ import (
 	"github.com/qor/session"
 )
 
-var UserInfoURL = "https://api.twitter.com/1.1/account/verify_credentials.json"
+var UserInfoURL = "https://api.twitter.com/1.1/account/verify_credentials.json?include_email=true"
 
 // Provider provide login with twitter
 type Provider struct {
@@ -93,6 +93,7 @@ func New(config *Config) *Provider {
 				}
 				schema.Provider = provider.GetName()
 				schema.UID = userInfo.ID
+				schema.Email = userInfo.Email
 				schema.Image = userInfo.Picture
 				schema.Name = userInfo.Name
 				schema.Location = userInfo.Location
@@ -199,6 +200,7 @@ func (Provider) ServeHTTP(*auth.Context) {
 type UserInfo struct {
 	ID       string `json:"id_str"`
 	Name     string `json:"name"`
+	Email    string `json:"email"`
 	Location string `json:"location"`
 	Locale   string `json:"lang"`
 	Picture  string `json:"profile_image_url"`
