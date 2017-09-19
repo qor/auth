@@ -56,7 +56,7 @@ func New(config *Config) *Provider {
 				schema       auth.Schema
 				requestToken = &oauth.RequestToken{}
 				consumer     = provider.NewConsumer(context)
-				oauthToken   = context.Request.URL.Query().Get("oauth_token")
+				oauthToken   = context.Request.URL.Query().Get("oauth_verifier")
 				authIdentity = reflect.New(utils.ModelType(context.Auth.Config.AuthIdentityModel)).Interface()
 				tx           = context.Auth.GetDB(context.Request)
 			)
@@ -67,6 +67,10 @@ func New(config *Config) *Provider {
 			}
 
 			json.Unmarshal([]byte(Claims.Issuer), requestToken)
+
+			if context.Request.URL.Query().Get("oauth_token") != requestToken.Token {
+				return nil, errors.New("invalid token")
+			}
 
 			atoken, err := consumer.AuthorizeToken(requestToken, oauthToken)
 
@@ -84,7 +88,9 @@ func New(config *Config) *Provider {
 				defer resp.Body.Close()
 				body, _ := ioutil.ReadAll(resp.Body)
 				userInfo := UserInfo{}
-				json.Unmarshal(body, &userInfo)
+				if err := json.Unmarshal(body, &userInfo); err != nil {
+					return nil, err
+				}
 				schema.Provider = provider.GetName()
 				schema.UID = userInfo.ID
 				schema.Image = userInfo.Picture
@@ -191,7 +197,7 @@ func (Provider) ServeHTTP(*auth.Context) {
 
 // UserInfo twitter user info structure
 type UserInfo struct {
-	ID       string `json:"id"`
+	ID       string `json:"id_str"`
 	Name     string `json:"name"`
 	Location string `json:"location"`
 	Locale   string `json:"lang"`
