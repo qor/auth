@@ -15,7 +15,7 @@ import (
 	"golang.org/x/oauth2/facebook"
 )
 
-var UserInfoURL = "https://www.facebookapis.com/oauth2/v3/userinfo"
+var UserInfoURL = "https://graph.facebook.com/me?access_token="
 
 // FacebookProvider provide login with facebook method
 type FacebookProvider struct {
@@ -29,6 +29,7 @@ type Config struct {
 	AuthorizeURL     string
 	RedirectURL      string
 	TokenURL         string
+	Scopes           []string
 	AuthorizeHandler func(context *auth.Context) (*claims.Claims, error)
 }
 
@@ -53,6 +54,10 @@ func New(config *Config) *FacebookProvider {
 
 	if config.TokenURL == "" {
 		config.TokenURL = facebook.Endpoint.TokenURL
+	}
+
+	if len(config.Scopes) == 0 {
+		config.Scopes = []string{"public_profile", "email"}
 	}
 
 	if config.AuthorizeHandler == nil {
@@ -81,8 +86,7 @@ func New(config *Config) *FacebookProvider {
 				}
 
 				{
-					client := oauthCfg.Client(oauth2.NoContext, tkn)
-					resp, err := client.Get(UserInfoURL)
+					resp, err := http.Get("https://graph.facebook.com/me?access_token=" + tkn.AccessToken)
 					if err != nil {
 						return nil, err
 					}
@@ -92,7 +96,7 @@ func New(config *Config) *FacebookProvider {
 					userInfo := UserInfo{}
 					json.Unmarshal(body, &userInfo)
 					schema.Provider = provider.GetName()
-					schema.UID = userInfo.Email
+					schema.UID = userInfo.ID
 					schema.Email = userInfo.Email
 					schema.FirstName = userInfo.GivenName
 					schema.LastName = userInfo.FamilyName
@@ -151,11 +155,12 @@ func (provider FacebookProvider) OAuthConfig(context *auth.Context) *oauth2.Conf
 	return &oauth2.Config{
 		ClientID:     config.ClientID,
 		ClientSecret: config.ClientSecret,
-		RedirectURL:  scheme + context.Request.Host + context.Auth.AuthURL("facebook/callback"),
 		Endpoint: oauth2.Endpoint{
 			AuthURL:  config.AuthorizeURL,
 			TokenURL: config.TokenURL,
 		},
+		RedirectURL: scheme + context.Request.Host + context.Auth.AuthURL("facebook/callback"),
+		Scopes:      config.Scopes,
 	}
 }
 
@@ -189,13 +194,14 @@ func (FacebookProvider) ServeHTTP(*auth.Context) {
 
 // UserInfo facebook user info structure
 type UserInfo struct {
-	Sub           string `json:"sub"`
-	Name          string `json:"name"`
-	GivenName     string `json:"given_name"`
-	FamilyName    string `json:"family_name"`
-	Picture       string `json:"picture"`
-	Profile       string `json:"profile"`
-	Email         string `json:"email"`
-	EmailVerified bool   `json:"email_verified"`
-	Gender        string `json:"gender"`
+	ID         string `json:"id"`
+	Name       string `json:"name"`
+	GivenName  string `json:"first_name"`
+	FamilyName string `json:"last_name"`
+	Picture    string `json:"picture"`
+	Profile    string `json:"link"`
+	Email      string `json:"email"`
+	Gender     string `json:"gender"`
+	Locale     string `json:"locale"`
+	Verified   bool   `json:"verified"`
 }
