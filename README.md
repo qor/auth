@@ -2,7 +2,7 @@
 
 Auth is a modular authentication system for web development in Golang, it provides different authentication backends to accelerate your development.
 
-Currently Auth has database password, github, google, facebook authentication support, and it is fairly easy to add other support based on [Auth's Provider interface](https://godoc.org/github.com/qor/auth#Provider)
+Currently Auth has database password, github, google, facebook, twitter authentication support, and it is fairly easy to add other support based on [Auth's Provider interface](https://godoc.org/github.com/qor/auth#Provider)
 
 ## Quick Start
 
@@ -23,6 +23,8 @@ import (
   "github.com/qor/auth/providers/github"
   "github.com/qor/auth/providers/google"
   "github.com/qor/auth/providers/password"
+  "github.com/qor/auth/providers/facebook"
+  "github.com/qor/auth/providers/twitter"
   "github.com/qor/session/manager"
 )
 
@@ -54,6 +56,18 @@ func init() {
   Auth.RegisterProvider(google.New(&google.Config{
     ClientID:     "google client id",
     ClientSecret: "google client secret",
+  }))
+
+  // Allow use Facebook
+  Auth.RegisterProvider(facebook.New(&facebook.Config{
+    ClientID:     "facebook client id",
+    ClientSecret: "facebook client secret",
+  }))
+
+  // Allow use Twitter
+  Auth.RegisterProvider(twitter.New(&twitter.Config{
+    ClientID:     "twitter client id",
+    ClientSecret: "twitter client secret",
   }))
 }
 
