@@ -3,7 +3,6 @@ package twitter
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"html/template"
 	"io/ioutil"
 	"net/http"
@@ -21,6 +20,7 @@ var UserInfoURL = "https://api.twitter.com/1.1/account/verify_credentials.json"
 
 // Provider provide login with twitter
 type Provider struct {
+	Auth *auth.Auth
 	*Config
 }
 
@@ -54,14 +54,25 @@ func New(config *Config) *Provider {
 			var (
 				authInfo     auth_identity.Basic
 				schema       auth.Schema
-				requestToken *oauth.RequestToken
+				requestToken = &oauth.RequestToken{}
 				consumer     = provider.NewConsumer(context)
 				oauthToken   = context.Request.URL.Query().Get("oauth_token")
 				authIdentity = reflect.New(utils.ModelType(context.Auth.Config.AuthIdentityModel)).Interface()
 				tx           = context.Auth.GetDB(context.Request)
 			)
 
+			Claims, err := provider.Auth.Get(context.Request)
+			if err != nil {
+				return nil, err
+			}
+
+			json.Unmarshal([]byte(Claims.Issuer), requestToken)
+
 			atoken, err := consumer.AuthorizeToken(requestToken, oauthToken)
+
+			if err != nil {
+				return nil, err
+			}
 
 			{
 				client, err := consumer.MakeHttpClient(atoken)
@@ -115,8 +126,9 @@ func (Provider) GetName() string {
 }
 
 // ConfigAuth config auth
-func (provider Provider) ConfigAuth(auth *auth.Auth) {
-	auth.Render.RegisterViewPath("github.com/qor/auth/providers/twitter/views")
+func (provider *Provider) ConfigAuth(auth *auth.Auth) {
+	provider.Auth = auth
+	provider.Auth.Render.RegisterViewPath("github.com/qor/auth/providers/twitter/views")
 }
 
 // NewConsumer new twitter consumer
@@ -143,7 +155,14 @@ func (provider Provider) Login(context *auth.Context) {
 
 	if err == nil {
 		// save requestToken into session
-		fmt.Println(requestToken)
+		Claims := &claims.Claims{}
+		if c, err := provider.Auth.Get(context.Request); err == nil {
+			Claims = c
+		}
+		tokenStr, _ := json.Marshal(requestToken)
+		Claims.Issuer = string(tokenStr)
+		provider.Auth.Update(context.Writer, context.Request, Claims)
+
 		http.Redirect(context.Writer, context.Request, u, http.StatusFound)
 		return
 	}
