@@ -2,12 +2,11 @@ package twitter
 
 import (
 	"errors"
+	"fmt"
 	"html/template"
 	"net/http"
-	"net/url"
 
-	"github.com/dghubble/oauth1"
-	"github.com/dghubble/oauth1/twitter"
+	"github.com/mrjones/oauth"
 	"github.com/qor/auth"
 	"github.com/qor/auth/claims"
 	"github.com/qor/session"
@@ -33,6 +32,8 @@ func New(config *Config) *Provider {
 		config = &Config{}
 	}
 
+	provider := &Provider{Config: config}
+
 	if config.ClientID == "" {
 		panic(errors.New("Twitter's ClientID can't be blank"))
 	}
@@ -41,35 +42,56 @@ func New(config *Config) *Provider {
 		panic(errors.New("Twitter's ClientSecret can't be blank"))
 	}
 
-	provider := &Provider{Config: config}
+	if config.AuthorizeHandler == nil {
+		config.AuthorizeHandler = func(context *auth.Context) (*claims.Claims, error) {
+			consumer := provider.NewConsumer(context)
+			requestToken := ""
+			fmt.Println(consumer)
+			fmt.Println(requestToken)
+			fmt.Println(context.Request.URL.String())
+
+			return nil, nil
+		}
+	}
 
 	return provider
 }
 
-// Login implemented login with twitter provider
-func (provider Provider) Login(context *auth.Context) {
-	var scheme = context.Request.URL.Scheme
+// GetName return provider name
+func (Provider) GetName() string {
+	return "twitter"
+}
+
+// ConfigAuth config auth
+func (provider Provider) ConfigAuth(auth *auth.Auth) {
+	auth.Render.RegisterViewPath("github.com/qor/auth/providers/twitter/views")
+}
+
+// NewConsumer new twitter consumer
+func (provider Provider) NewConsumer(context *auth.Context) *oauth.Consumer {
+	scheme := context.Request.URL.Scheme
 
 	if scheme == "" {
 		scheme = "http://"
 	}
 
-	config := oauth1.Config{
-		ConsumerKey:    provider.ClientID,
-		ConsumerSecret: provider.ClientSecret,
-		CallbackURL:    scheme + context.Request.Host + context.Auth.AuthURL("twitter/callback"),
-		Endpoint:       twitter.AuthorizeEndpoint,
-	}
+	return oauth.NewConsumer(provider.ClientID, provider.ClientSecret, oauth.ServiceProvider{
+		RequestTokenUrl:   "https://api.twitter.com/oauth/request_token",
+		AuthorizeTokenUrl: "https://api.twitter.com/oauth/authorize",
+		AccessTokenUrl:    "https://api.twitter.com/oauth/access_token",
+	})
+}
 
-	requestToken, _, err := config.RequestToken()
+// Login implemented login with twitter provider
+func (provider Provider) Login(context *auth.Context) {
+	consumer := provider.NewConsumer(context)
+	requestToken, u, err := consumer.GetRequestTokenAndUrl("oob")
 
 	if err == nil {
-		var authorizationURL *url.URL
-		authorizationURL, err = config.AuthorizationURL(requestToken)
-		if err == nil {
-			http.Redirect(context.Writer, context.Request, authorizationURL.String(), http.StatusFound)
-			return
-		}
+		// save requestToken into session
+		fmt.Println(requestToken)
+		http.Redirect(context.Writer, context.Request, u, http.StatusFound)
+		return
 	}
 
 	context.SessionStorer.Flash(context.Writer, context.Request, session.Message{Message: template.HTML(err.Error()), Type: "error"})
