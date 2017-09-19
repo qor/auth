@@ -1,8 +1,16 @@
 package twitter
 
 import (
+	"errors"
+	"html/template"
+	"net/http"
+	"net/url"
+
+	"github.com/dghubble/oauth1"
+	"github.com/dghubble/oauth1/twitter"
 	"github.com/qor/auth"
 	"github.com/qor/auth/claims"
+	"github.com/qor/session"
 )
 
 // Provider provide login with twitter
@@ -25,6 +33,14 @@ func New(config *Config) *Provider {
 		config = &Config{}
 	}
 
+	if config.ClientID == "" {
+		panic(errors.New("Twitter's ClientID can't be blank"))
+	}
+
+	if config.ClientSecret == "" {
+		panic(errors.New("Twitter's ClientSecret can't be blank"))
+	}
+
 	provider := &Provider{Config: config}
 
 	return provider
@@ -32,11 +48,32 @@ func New(config *Config) *Provider {
 
 // Login implemented login with twitter provider
 func (provider Provider) Login(context *auth.Context) {
-	claims := claims.Claims{}
-	claims.Subject = "state"
-	signedToken := context.Auth.SessionStorer.SignedToken(&claims)
+	var scheme = context.Request.URL.Scheme
 
-	// TODO
+	if scheme == "" {
+		scheme = "http://"
+	}
+
+	config := oauth1.Config{
+		ConsumerKey:    provider.ClientID,
+		ConsumerSecret: provider.ClientSecret,
+		CallbackURL:    scheme + context.Request.Host + context.Auth.AuthURL("twitter/callback"),
+		Endpoint:       twitter.AuthorizeEndpoint,
+	}
+
+	requestToken, _, err := config.RequestToken()
+
+	if err == nil {
+		var authorizationURL *url.URL
+		authorizationURL, err = config.AuthorizationURL(requestToken)
+		if err == nil {
+			http.Redirect(context.Writer, context.Request, authorizationURL.String(), http.StatusFound)
+			return
+		}
+	}
+
+	context.SessionStorer.Flash(context.Writer, context.Request, session.Message{Message: template.HTML(err.Error()), Type: "error"})
+	context.Auth.Config.Render.Execute("auth/login", context, context.Request, context.Writer)
 }
 
 // Logout implemented logout with twitter provider
