@@ -2,7 +2,7 @@
 
 Auth is a modular authentication system for web development in Golang, it provides different authentication backends to accelerate your development.
 
-Currently Auth has database password, github, google authentication support, and it is fairly easy to add other support based on [Auth's Provider interface](https://godoc.org/github.com/qor/auth#Provider)
+Currently Auth has database password, github, google, facebook authentication support, and it is fairly easy to add other support based on [Auth's Provider interface](https://godoc.org/github.com/qor/auth#Provider)
 
 ## Quick Start
 
