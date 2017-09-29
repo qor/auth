@@ -82,6 +82,8 @@ func main() {
 
 That's it, then you could goto `http://127.0.0.1:9000/auth/login` to try Auth features, like login, logout, register, forgot/change password...
 
+And it could be even easier with [Auth Themes](#auth-themes), you could integrate Auth into your application with few line configurations.
+
 ## Usage
 
 Auth has many configurations that could be used to customize it for different usage, lets start from Auth's [Config](http://godoc.org/github.com/qor/auth#Config).
