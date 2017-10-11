@@ -6,7 +6,6 @@ import (
 	"net/mail"
 	"path"
 	"reflect"
-	"strings"
 	"time"
 
 	"github.com/qor/auth"
@@ -53,7 +52,10 @@ var DefaultConfirmationMailer = func(email string, context *auth.Context, claims
 			},
 			"confirm_url": func() string {
 				confirmURL := utils.GetAbsURL(context.Request)
-				confirmURL.Path = path.Join(context.Auth.AuthURL("password/confirm"), context.SessionStorer.SignedToken(claims))
+				confirmURL.Path = path.Join(context.Auth.AuthURL("password/confirm"))
+				qry := confirmURL.Query()
+				qry.Set("token", context.SessionStorer.SignedToken(claims))
+				confirmURL.RawQuery = qry.Encode()
 				return confirmURL.String()
 			},
 		}))
@@ -65,8 +67,7 @@ var DefaultConfirmHandler = func(context *auth.Context) error {
 		authInfo    auth_identity.Basic
 		provider, _ = context.Provider.(*Provider)
 		tx          = context.Auth.GetDB(context.Request)
-		paths       = strings.Split(context.Request.URL.Path, "/")
-		token       = paths[len(paths)-1]
+		token       = context.Request.URL.Query().Get("token")
 	)
 
 	claims, err := context.SessionStorer.ValidateClaims(token)
