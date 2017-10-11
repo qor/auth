@@ -179,9 +179,9 @@ func (provider Provider) ServeHTTP(context *auth.Context) {
 			}
 		case "edit":
 			// render edit password page
-			if len(paths) == 3 {
+			if token := context.Request.URL.Query().Get("token"); token != "" {
 				context.Auth.Config.Render.Funcs(template.FuncMap{
-					"reset_password_token": func() string { return paths[2] },
+					"reset_password_token": func() string { return token },
 				}).Execute("auth/password/edit", context, context.Request, context.Writer)
 				return
 			}

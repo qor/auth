@@ -47,7 +47,10 @@ var DefaultResetPasswordMailer = func(email string, context *auth.Context, claim
 			},
 			"reset_password_url": func() string {
 				resetPasswordURL := utils.GetAbsURL(context.Request)
-				resetPasswordURL.Path = path.Join(context.Auth.AuthURL("password/edit"), context.SessionStorer.SignedToken(claims))
+				resetPasswordURL.Path = path.Join(context.Auth.AuthURL("password/edit"))
+				qry := resetPasswordURL.Query()
+				qry.Set("token", context.SessionStorer.SignedToken(claims))
+				resetPasswordURL.RawQuery = qry.Encode()
 				return resetPasswordURL.String()
 			},
 		}),
