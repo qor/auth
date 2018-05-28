@@ -26,12 +26,13 @@ type Provider struct {
 
 // Config twitter Config
 type Config struct {
-	ClientID         string
-	ClientSecret     string
-	AuthorizeURL     string
-	TokenURL         string
-	RedirectURL      string
-	AuthorizeHandler func(context *auth.Context) (*claims.Claims, error)
+	ClientID          string
+	ClientSecret      string
+	AuthorizeURL      string
+	TokenURL          string
+	RedirectURL       string
+	AuthorizeHandler  func(context *auth.Context) (*claims.Claims, error)
+	DeregisterHandler func(*auth.Context)
 }
 
 func New(config *Config) *Provider {
@@ -185,6 +186,15 @@ func (Provider) Logout(context *auth.Context) {
 // Register implemented register with twitter provider
 func (provider Provider) Register(context *auth.Context) {
 	provider.Login(context)
+}
+
+// Deregister implemented deregister with twitter provider
+func (provider Provider) Deregister(context *auth.Context) {
+	if provider.DeregisterHandler != nil {
+		provider.DeregisterHandler(context)
+	} else {
+		context.Writer.WriteHeader(http.StatusNotImplemented)
+	}
 }
 
 // Callback implement Callback with twitter provider

@@ -31,6 +31,10 @@ func (PhoneProvider) Logout(context *auth.Context) {
 func (PhoneProvider) Register(context *auth.Context) {
 }
 
+// Deregister implemented register with phone provider
+func (PhoneProvider) Deregister(context *auth.Context) {
+}
+
 // Callback implement Callback with phone provider
 func (PhoneProvider) Callback(*auth.Context) {
 }
