@@ -23,9 +23,10 @@ type Config struct {
 	ResetPasswordHandler   func(*auth.Context) error
 	RecoverPasswordHandler func(*auth.Context) error
 
-	Encryptor        encryptor.Interface
-	AuthorizeHandler func(*auth.Context) (*claims.Claims, error)
-	RegisterHandler  func(*auth.Context) (*claims.Claims, error)
+	Encryptor         encryptor.Interface
+	AuthorizeHandler  func(*auth.Context) (*claims.Claims, error)
+	RegisterHandler   func(*auth.Context) (*claims.Claims, error)
+	DeregisterHandler func(*auth.Context)
 }
 
 // New initialize password provider
@@ -98,6 +99,15 @@ func (provider Provider) Login(context *auth.Context) {
 // Register implemented register with password provider
 func (provider Provider) Register(context *auth.Context) {
 	context.Auth.RegisterHandler(context, provider.RegisterHandler)
+}
+
+// Deregister implemented deregister with password provider
+func (provider Provider) Deregister(context *auth.Context) {
+	if provider.DeregisterHandler != nil {
+		provider.DeregisterHandler(context)
+	} else {
+		context.Writer.WriteHeader(http.StatusNotImplemented)
+	}
 }
 
 // Logout implemented logout with password provider

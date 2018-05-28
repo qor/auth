@@ -24,13 +24,14 @@ type FacebookProvider struct {
 
 // Config facebook Config
 type Config struct {
-	ClientID         string
-	ClientSecret     string
-	AuthorizeURL     string
-	RedirectURL      string
-	TokenURL         string
-	Scopes           []string
-	AuthorizeHandler func(context *auth.Context) (*claims.Claims, error)
+	ClientID          string
+	ClientSecret      string
+	AuthorizeURL      string
+	RedirectURL       string
+	TokenURL          string
+	Scopes            []string
+	AuthorizeHandler  func(context *auth.Context) (*claims.Claims, error)
+	DeregisterHandler func(*auth.Context)
 }
 
 func New(config *Config) *FacebookProvider {
@@ -181,6 +182,15 @@ func (FacebookProvider) Logout(context *auth.Context) {
 // Register implemented register with facebook provider
 func (provider FacebookProvider) Register(context *auth.Context) {
 	provider.Login(context)
+}
+
+// Deregister implemented deregister with facebook provider
+func (provider FacebookProvider) Deregister(context *auth.Context) {
+	if provider.DeregisterHandler != nil {
+		provider.DeregisterHandler(context)
+	} else {
+		context.Writer.WriteHeader(http.StatusNotImplemented)
+	}
 }
 
 // Callback implement Callback with facebook provider
