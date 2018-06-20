@@ -17,6 +17,8 @@ To use it, basic flow is:
 Here is an example:
 
 ```go
+package main
+
 import (
   "github.com/qor/auth"
   "github.com/qor/auth/auth_identity"
@@ -26,6 +28,10 @@ import (
   "github.com/qor/auth/providers/facebook"
   "github.com/qor/auth/providers/twitter"
   "github.com/qor/session/manager"
+
+  _ "github.com/mattn/go-sqlite3"
+
+  "net/http"
 )
 
 var (
