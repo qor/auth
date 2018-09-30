@@ -1,13 +1,11 @@
 package password
 
 import (
-	"reflect"
 	"strings"
 
 	"github.com/qor/auth"
 	"github.com/qor/auth/auth_identity"
 	"github.com/qor/auth/claims"
-	"github.com/qor/qor/utils"
 	"github.com/qor/session"
 )
 
@@ -23,9 +21,9 @@ var DefaultAuthorizeHandler = func(context *auth.Context) (*claims.Claims, error
 	req.ParseForm()
 	authInfo.Provider = provider.GetName()
 	authInfo.UID = strings.TrimSpace(req.Form.Get("login"))
-
 	authwhere := auth_identity.AuthIdentity{Basic: authInfo}
-	if tx.Model(context.Auth.AuthIdentityModel).Where(authwhere).Scan(&authInfo).RecordNotFound() {
+
+	if tx.Model(context.Auth.AuthIdentityModel).Where(authwhere).Scan(&authInfo).RecordNotFound() { //authInfo in authwhere geändert
 		return nil, auth.ErrInvalidAccount
 	}
 
@@ -66,8 +64,10 @@ var DefaultRegisterHandler = func(context *auth.Context) (*claims.Claims, error)
 
 	authInfo.Provider = provider.GetName()
 	authInfo.UID = strings.TrimSpace(req.Form.Get("login"))
+	authwhere := auth_identity.AuthIdentity{Basic: authInfo}
+	//authIdentity := reflect.New(utils.ModelType(context.Auth.Config.AuthIdentityModel)).Interface()
 
-	if !tx.Model(context.Auth.AuthIdentityModel).Where(authInfo).Scan(&authInfo).RecordNotFound() {
+	if !tx.Model(context.Auth.AuthIdentityModel).Where(authwhere).Scan(&authInfo).RecordNotFound() {
 		return nil, auth.ErrInvalidAccount
 	}
 
@@ -82,9 +82,10 @@ var DefaultRegisterHandler = func(context *auth.Context) (*claims.Claims, error)
 			return nil, err
 		}
 
-		// create auth identity
-		authIdentity := reflect.New(utils.ModelType(context.Auth.Config.AuthIdentityModel)).Interface()
-		if err = tx.Where(authInfo).FirstOrCreate(authIdentity).Error; err == nil {
+		// copy authInfo to authwhere because it has no login credencials
+		authwhere.Basic = authInfo
+		// store login credencials
+		if err = tx.Where(authwhere).FirstOrCreate(&authwhere).Error; err == nil {
 			if provider.Config.Confirmable {
 				context.SessionStorer.Flash(context.Writer, req, session.Message{Message: ConfirmFlashMessage, Type: "success"})
 				err = provider.Config.ConfirmMailer(schema.Email, context, authInfo.ToClaims(), currentUser)
