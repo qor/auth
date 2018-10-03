@@ -62,6 +62,7 @@ func init() {
   Auth.RegisterProvider(google.New(&google.Config{
     ClientID:     "google client id",
     ClientSecret: "google client secret",
+    AllowedDomains: []string{}, // Accept all domains, instead you can pass a whitelist of acceptable domains
   }))
 
   // Allow use Facebook

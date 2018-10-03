@@ -3,9 +3,11 @@ package google
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"reflect"
+	"strings"
 
 	"github.com/qor/auth"
 	"github.com/qor/auth/auth_identity"
@@ -30,6 +32,7 @@ type Config struct {
 	TokenURL         string
 	RedirectURL      string
 	Scopes           []string
+	AllowedDomains   []string
 	AuthorizeHandler func(context *auth.Context) (*claims.Claims, error)
 }
 
@@ -106,6 +109,10 @@ func New(config *Config) *GoogleProvider {
 					schema.RawInfo = userInfo
 				}
 
+				if !isDomainAllowed(schema.Email, config.AllowedDomains) {
+					return nil, auth.ErrUnauthorized
+				}
+
 				authInfo.Provider = provider.GetName()
 				authInfo.UID = schema.UID
 
@@ -130,6 +137,19 @@ func New(config *Config) *GoogleProvider {
 		}
 	}
 	return provider
+}
+
+func isDomainAllowed(email string, domains []string) bool {
+	if len(domains) == 0 {
+		return true
+	}
+
+	for _, domain := range domains {
+		if strings.HasSuffix(email, fmt.Sprintf("@%s", domain)) {
+			return true
+		}
+	}
+	return false
 }
 
 // GetName return provider name
