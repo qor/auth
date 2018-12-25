@@ -40,6 +40,7 @@ var DefaultConfirmationMailer = func(email string, context *auth.Context, claims
 	return context.Auth.Mailer.Send(
 		mailer.Email{
 			TO:      []mail.Address{{Address: email}},
+			From:    &mail.Address{Address: "info@77g.de"},
 			Subject: ConfirmationMailSubject,
 		}, mailer.Template{
 			Name:    "auth/confirmation",
@@ -68,6 +69,7 @@ var DefaultConfirmHandler = func(context *auth.Context) error {
 		provider, _ = context.Provider.(*Provider)
 		tx          = context.Auth.GetDB(context.Request)
 		token       = context.Request.URL.Query().Get("token")
+		currentUser = reflect.New(utils.ModelType(context.Auth.Config.UserModel)).Interface()
 	)
 
 	claims, err := context.SessionStorer.ValidateClaims(token)
@@ -79,16 +81,22 @@ var DefaultConfirmHandler = func(context *auth.Context) error {
 			authInfo.UserID = claims.UserID
 			authIdentity := reflect.New(utils.ModelType(context.Auth.Config.AuthIdentityModel)).Interface()
 			authwhere := auth_identity.AuthIdentity{Basic: authInfo}
-			authwhere.Basic = authInfo
 
-			if tx.Where(authInfo).First(authIdentity).RecordNotFound() {
+			if tx.Where(authwhere).First(authIdentity).RecordNotFound() {
 				err = auth.ErrInvalidAccount
+				return err
 			}
+			//load user to get ConfirmedAt date
+			tx.Where(&authwhere).First(&authwhere)
 
 			if err == nil {
-				if authInfo.ConfirmedAt == nil {
+				if authwhere.Basic.ConfirmedAt == nil {
 					now := time.Now()
 					authInfo.ConfirmedAt = &now
+
+					//User updaten
+					tx.Model(&currentUser).Where("ID = ? and email = ?", authwhere.Basic.UserID, authwhere.Basic.UID).Updates(map[string]interface{}{"confirm_token": token, "confirmed": true})
+
 					if err = tx.Model(authwhere).Where("user_id = ?", authInfo.UserID).Update(authInfo).Error; err == nil {
 						context.SessionStorer.Flash(context.Writer, context.Request, session.Message{Message: ConfirmedAccountFlashMessage, Type: "success"})
 						context.Auth.Redirector.Redirect(context.Writer, context.Request, "confirm")
