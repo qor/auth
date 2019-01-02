@@ -67,6 +67,7 @@ func (UserStorer) Save(schema *Schema, context *Context) (user interface{}, user
 
 	if context.Auth.Config.UserModel != nil {
 		currentUser := reflect.New(utils.ModelType(context.Auth.Config.UserModel)).Interface()
+		schema.Role = "Costumer" //set the default role for every new user
 		copier.Copy(currentUser, schema)
 		err = tx.Create(currentUser).Error
 		return currentUser, fmt.Sprint(tx.NewScope(currentUser).PrimaryKeyValue()), err

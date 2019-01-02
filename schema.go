@@ -13,6 +13,7 @@ type Schema struct {
 	Image     string
 	Phone     string
 	URL       string
+	Role      string `gorm:"default:'Costumer'"`
 
 	RawInfo interface{}
 }

@@ -94,7 +94,7 @@ var DefaultConfirmHandler = func(context *auth.Context) error {
 					now := time.Now()
 					authInfo.ConfirmedAt = &now
 
-					//User updaten
+					//add token to user table
 					tx.Model(&currentUser).Where("ID = ? and email = ?", authwhere.Basic.UserID, authwhere.Basic.UID).Updates(map[string]interface{}{"confirm_token": token, "confirmed": true})
 
 					if err = tx.Model(authwhere).Where("user_id = ?", authInfo.UserID).Update(authInfo).Error; err == nil {
