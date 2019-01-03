@@ -9,16 +9,6 @@
       {{end}}
     </ul>
   {{end}}
-
-  <div>
-    <div>
-      {{range $provider := .GetProviders}}
-        <div>Register with {{$provider.GetName}}</div>
-        {{render (printf "auth/register/providers/%v" $provider.GetName)}}
-      {{end}}
-    </div>
-  </div>
-
   <div>
     <a href="{{.AuthURL "login"}}">Sign in</a>
   </div>
