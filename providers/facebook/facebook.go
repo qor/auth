@@ -3,6 +3,7 @@ package facebook
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"reflect"
@@ -65,7 +66,7 @@ func New(config *Config) *FacebookProvider {
 			var (
 				req          = context.Request
 				schema       auth.Schema
-				authInfo     auth_identity.Basic
+				authInfo     auth_identity.AuthIdentity
 				tx           = context.Auth.GetDB(req)
 				authIdentity = reflect.New(utils.ModelType(context.Auth.Config.AuthIdentityModel)).Interface()
 			)
@@ -86,17 +87,19 @@ func New(config *Config) *FacebookProvider {
 				}
 
 				{
-					resp, err := http.Get("https://graph.facebook.com/me?access_token=" + tkn.AccessToken)
+					resp, err := http.Get("https://graph.facebook.com/me?fields=id,name,first_name,last_name,picture,link,email,gender,locale,verified&access_token=" + tkn.AccessToken)
 					if err != nil {
 						return nil, err
 					}
 
 					defer resp.Body.Close()
 					body, _ := ioutil.ReadAll(resp.Body)
+					response_json := string(body)
+					fmt.Println(response_json)
 					userInfo := UserInfo{}
 					json.Unmarshal(body, &userInfo)
 					schema.Provider = provider.GetName()
-					schema.UID = userInfo.ID
+					schema.UID = userInfo.Email
 					schema.Email = userInfo.Email
 					schema.FirstName = userInfo.GivenName
 					schema.LastName = userInfo.FamilyName

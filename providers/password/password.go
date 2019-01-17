@@ -130,7 +130,7 @@ func (provider Provider) ServeHTTP(context *auth.Context) {
 				case "send":
 					var (
 						currentUser interface{}
-						authInfo    auth_identity.Basic
+						authInfo    auth_identity.AuthIdentity
 						tx          = context.Auth.GetDB(req)
 					)
 

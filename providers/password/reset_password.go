@@ -62,7 +62,7 @@ var DefaultRecoverPasswordHandler = func(context *auth.Context) error {
 	context.Request.ParseForm()
 
 	var (
-		authInfo    auth_identity.Basic
+		authInfo    auth_identity.AuthIdentity
 		email       = context.Request.Form.Get("email")
 		provider, _ = context.Provider.(*Provider)
 	)
@@ -90,7 +90,7 @@ var DefaultResetPasswordHandler = func(context *auth.Context) error {
 	context.Request.ParseForm()
 
 	var (
-		authInfo    auth_identity.Basic
+		authInfo    auth_identity.AuthIdentity
 		token       = context.Request.Form.Get("reset_password_token")
 		provider, _ = context.Provider.(*Provider)
 		tx          = context.Auth.GetDB(context.Request)
