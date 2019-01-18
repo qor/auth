@@ -152,7 +152,7 @@ func (provider FacebookProvider) OAuthConfig(context *auth.Context) *oauth2.Conf
 	)
 
 	if scheme == "" {
-		scheme = "http://"
+		scheme = "https://"
 	}
 
 	return &oauth2.Config{
