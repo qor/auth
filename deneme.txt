@@ -1,0 +1,1 @@
+gorep -from="github.com/qor/auth" -to="github.com/lutfuahmet/auth"

@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/qor/auth/claims"
+	"github.com/lutfuahmet/auth/claims"
 	"github.com/qor/responder"
 	"github.com/qor/session"
 )

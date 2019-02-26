@@ -3,7 +3,7 @@ package auth
 import (
 	"net/http"
 
-	"github.com/qor/auth/claims"
+	"github.com/lutfuahmet/auth/claims"
 	"github.com/qor/session"
 )
 

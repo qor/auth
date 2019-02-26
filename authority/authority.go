@@ -4,7 +4,7 @@ import (
 	"html/template"
 	"net/http"
 
-	"github.com/qor/auth"
+	"github.com/lutfuahmet/auth"
 	"github.com/qor/middlewares"
 	"github.com/qor/roles"
 	"github.com/qor/session"

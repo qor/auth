@@ -8,9 +8,9 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/qor/auth"
-	"github.com/qor/auth/auth_identity"
-	"github.com/qor/auth/claims"
+	"github.com/lutfuahmet/auth"
+	"github.com/lutfuahmet/auth/auth_identity"
+	"github.com/lutfuahmet/auth/claims"
 	"github.com/qor/mailer"
 	"github.com/qor/qor/utils"
 	"github.com/qor/session"

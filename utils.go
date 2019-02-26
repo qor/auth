@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/jinzhu/gorm"
-	"github.com/qor/auth/claims"
+	"github.com/lutfuahmet/auth/claims"
 	"github.com/qor/qor/utils"
 )
 

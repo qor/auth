@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	jwt "github.com/dgrijalva/jwt-go"
-	"github.com/qor/auth/claims"
+	"github.com/lutfuahmet/auth/claims"
 	"github.com/qor/session"
 )
 
