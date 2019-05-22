@@ -24,7 +24,11 @@ var DefaultAuthorizeHandler = func(context *auth.Context) (*claims.Claims, error
 	authInfo.Provider = provider.GetName()
 	authInfo.UID = strings.TrimSpace(req.Form.Get("login"))
 
-	if tx.Model(context.Auth.AuthIdentityModel).Where(authInfo).Scan(&authInfo).RecordNotFound() {
+	if tx.Model(context.Auth.AuthIdentityModel).Where(
+		map[string]interface{}{
+			"provider": authInfo.Provider,
+			"uid":      authInfo.UID,
+		}).Scan(&authInfo).RecordNotFound() {
 		return nil, auth.ErrInvalidAccount
 	}
 
