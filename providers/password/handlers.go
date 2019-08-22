@@ -24,7 +24,8 @@ var DefaultAuthorizeHandler = func(context *auth.Context) (*claims.Claims, error
 	authInfo.Provider = provider.GetName()
 	authInfo.UID = strings.TrimSpace(req.Form.Get("login"))
 
-	if tx.Model(context.Auth.AuthIdentityModel).Where(authInfo).Scan(&authInfo).RecordNotFound() {
+	authWhere := auth_identity.AuthIdentity{Basic: authInfo}
+	if tx.Model(context.Auth.AuthIdentityModel).Where(authWhere).Scan(&authInfo).RecordNotFound() {
 		return nil, auth.ErrInvalidAccount
 	}
 
@@ -66,7 +67,8 @@ var DefaultRegisterHandler = func(context *auth.Context) (*claims.Claims, error)
 	authInfo.Provider = provider.GetName()
 	authInfo.UID = strings.TrimSpace(req.Form.Get("login"))
 
-	if !tx.Model(context.Auth.AuthIdentityModel).Where(authInfo).Scan(&authInfo).RecordNotFound() {
+	authWhere := auth_identity.AuthIdentity{Basic: authInfo}
+	if !tx.Model(context.Auth.AuthIdentityModel).Where(authWhere).Scan(&authInfo).RecordNotFound() {
 		return nil, auth.ErrInvalidAccount
 	}
 
@@ -83,7 +85,8 @@ var DefaultRegisterHandler = func(context *auth.Context) (*claims.Claims, error)
 
 		// create auth identity
 		authIdentity := reflect.New(utils.ModelType(context.Auth.Config.AuthIdentityModel)).Interface()
-		if err = tx.Where(authInfo).FirstOrCreate(authIdentity).Error; err == nil {
+		authWhere = auth_identity.AuthIdentity{Basic: authInfo}
+		if err = tx.Where(authWhere).FirstOrCreate(authIdentity).Error; err == nil {
 			if provider.Config.Confirmable {
 				context.SessionStorer.Flash(context.Writer, req, session.Message{Message: ConfirmFlashMessage, Type: "success"})
 				err = provider.Config.ConfirmMailer(schema.Email, context, authInfo.ToClaims(), currentUser)

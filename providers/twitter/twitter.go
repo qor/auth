@@ -104,6 +104,7 @@ func New(config *Config) *Provider {
 			authInfo.Provider = provider.GetName()
 			authInfo.UID = schema.UID
 
+			authWhere := auth_identity.AuthIdentity{Basic: authInfo}
 			if !tx.Model(authIdentity).Where(authInfo).Scan(&authInfo).RecordNotFound() {
 				return authInfo.ToClaims(), nil
 			}
@@ -116,7 +117,8 @@ func New(config *Config) *Provider {
 				return nil, err
 			}
 
-			if err = tx.Where(authInfo).FirstOrCreate(authIdentity).Error; err == nil {
+			authWhere = auth_identity.AuthIdentity{Basic: authInfo}
+			if err = tx.Where(authWhere).FirstOrCreate(authIdentity).Error; err == nil {
 				return authInfo.ToClaims(), nil
 			}
 
