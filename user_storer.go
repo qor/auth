@@ -42,7 +42,8 @@ func (UserStorer) Get(Claims *claims.Claims, context *Context) (user interface{}
 		}
 	)
 
-	if !tx.Where(authInfo).First(authIdentity).RecordNotFound() {
+	authWhere := auth_identity.AuthIdentity{Basic: authInfo}
+	if !tx.Where(authInfo).First(authWhere).RecordNotFound() {
 		if context.Auth.Config.UserModel != nil {
 			if authBasicInfo, ok := authIdentity.(interface {
 				ToClaims() *claims.Claims
