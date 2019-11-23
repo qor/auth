@@ -125,22 +125,17 @@ func (provider Provider) ServeHTTP(context *auth.Context) {
 		switch paths[1] {
 		case "confirmation":
 			var err error
-
 			if len(paths) >= 3 {
 				switch paths[2] {
-				case "new":
-					// render new confirmation page
-					context.Auth.Config.Render.Execute("auth/confirmation/new", context, context.Request, context.Writer)
 				case "send":
 					err = provider.SendConfirmHandler(context)
+				default:
+					err = context.Auth.Config.Render.Execute("auth/confirmation/new", context, context.Request, context.Writer)
 				}
 			}
-
 			if err != nil {
 				context.SessionStorer.Flash(context.Writer, req, session.Message{Message: template.HTML(err.Error()), Type: "error"})
 			}
-			// render new confirmation page
-			context.Auth.Config.Render.Execute("auth/confirmation/new", context, context.Request, context.Writer)
 		case "confirm":
 			// confirm user
 			err := provider.ConfirmHandler(context)
