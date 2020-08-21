@@ -68,7 +68,7 @@ func New(config *Config) *GoogleProvider {
 			var (
 				req          = context.Request
 				schema       auth.Schema
-				authInfo     auth_identity.Basic
+				authInfo     auth_identity.AuthIdentity
 				tx           = context.Auth.GetDB(req)
 				authIdentity = reflect.New(utils.ModelType(context.Auth.Config.AuthIdentityModel)).Interface()
 			)
@@ -169,7 +169,7 @@ func (provider GoogleProvider) OAuthConfig(context *auth.Context) *oauth2.Config
 	)
 
 	if scheme == "" {
-		scheme = "http://"
+		scheme = "https://"
 	}
 
 	return &oauth2.Config{
