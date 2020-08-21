@@ -66,7 +66,7 @@ var DefaultRegisterHandler = func(context *auth.Context) (*claims.Claims, error)
 	authInfo.Provider = provider.GetName()
 	authInfo.UID = strings.TrimSpace(req.Form.Get("login"))
 
-	if !tx.Model(context.Auth.AuthIdentityModel).Where(authInfo).Scan(&authInfo).RecordNotFound() {
+	if !tx.Model(context.Auth.AuthIdentityModel).Where("provider = ? AND uid = ?", authInfo.Provider, authInfo.UID).Scan(&authInfo).RecordNotFound() {
 		return nil, auth.ErrInvalidAccount
 	}
 
