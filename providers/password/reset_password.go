@@ -104,7 +104,7 @@ var DefaultResetPasswordHandler = func(context *auth.Context) error {
 			authInfo.UID = claims.Id
 			authIdentity := reflect.New(utils.ModelType(context.Auth.Config.AuthIdentityModel)).Interface()
 
-			if tx.Where(authInfo).First(authIdentity).RecordNotFound() {
+			if tx.Where("provider = ? AND uid = ?", authInfo.Provider, authInfo.UID).First(authIdentity).RecordNotFound() {
 				return auth.ErrInvalidAccount
 			}
 
