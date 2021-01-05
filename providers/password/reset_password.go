@@ -2,6 +2,7 @@ package password
 
 import (
 	"net/mail"
+	"os"
 	"path"
 	"reflect"
 	"strings"
@@ -36,6 +37,7 @@ var DefaultResetPasswordMailer = func(email string, context *auth.Context, claim
 		mailer.Email{
 			TO:      []mail.Address{{Address: email}},
 			Subject: ResetPasswordMailSubject,
+			From: &mail.Address{Address: os.Getenv("SMTP_FROM")},
 		}, mailer.Template{
 			Name:    "auth/reset_password",
 			Data:    context,
