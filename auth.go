@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	jwt "github.com/dgrijalva/jwt-go"
+	jwt "github.com/golang-jwt/jwt/v4"
 	"github.com/jinzhu/gorm"
 	"github.com/qor/auth/auth_identity"
 	"github.com/qor/auth/claims"
