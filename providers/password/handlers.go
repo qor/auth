@@ -14,7 +14,7 @@ import (
 // DefaultAuthorizeHandler default authorize handler
 var DefaultAuthorizeHandler = func(context *auth.Context) (*claims.Claims, error) {
 	var (
-		authInfo    auth_identity.Basic
+		authInfo    auth_identity.AuthIdentity
 		req         = context.Request
 		tx          = context.Auth.GetDB(req)
 		provider, _ = context.Provider.(*Provider)
@@ -48,7 +48,7 @@ var DefaultRegisterHandler = func(context *auth.Context) (*claims.Claims, error)
 		err         error
 		currentUser interface{}
 		schema      auth.Schema
-		authInfo    auth_identity.Basic
+		authInfo    auth_identity.AuthIdentity
 		req         = context.Request
 		tx          = context.Auth.GetDB(req)
 		provider, _ = context.Provider.(*Provider)
