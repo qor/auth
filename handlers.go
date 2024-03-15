@@ -2,9 +2,11 @@ package auth
 
 import (
 	"crypto/md5"
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"mime"
+
 	"net/http"
 	"path"
 	"path/filepath"
