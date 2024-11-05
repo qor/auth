@@ -4,6 +4,7 @@ import (
 	"errors"
 	"html/template"
 	"net/mail"
+	"os"
 	"path"
 	"reflect"
 	"time"
@@ -40,6 +41,7 @@ var DefaultConfirmationMailer = func(email string, context *auth.Context, claims
 	return context.Auth.Mailer.Send(
 		mailer.Email{
 			TO:      []mail.Address{{Address: email}},
+			From: &mail.Address{Address: os.Getenv("SMTP_FROM")},
 			Subject: ConfirmationMailSubject,
 		}, mailer.Template{
 			Name:    "auth/confirmation",
