@@ -40,8 +40,6 @@ func (auth *Auth) GetProvider(name string) Provider {
 
 // GetProviders return registered providers
 func (auth *Auth) GetProviders() (providers []Provider) {
-	for _, provider := range auth.providers {
-		providers = append(providers, provider)
-	}
+	providers = append(providers, auth.providers...)
 	return
 }
