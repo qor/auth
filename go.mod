@@ -16,13 +16,13 @@ require (
 	github.com/qor/responder v0.0.0-20171031032654-b6def473574f
 	github.com/qor/roles v0.0.0-20171127035124-d6375609fe3e
 	github.com/qor/session v0.0.0-20170907035918-8206b0adab70
-	golang.org/x/crypto v0.35.0
+	golang.org/x/crypto v0.36.0
 	golang.org/x/oauth2 v0.27.0
 )
 
 require (
+	cloud.google.com/go/compute/metadata v0.3.0 // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect
-	github.com/chris-ramon/douceur v0.2.0 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/google/go-querystring v1.0.0 // indirect
 	github.com/gorilla/context v1.1.1 // indirect
@@ -32,8 +32,8 @@ require (
 	github.com/gosimple/slug v1.9.0 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.1 // indirect
-	github.com/microcosm-cc/bluemonday v1.0.3 // indirect
+	github.com/microcosm-cc/bluemonday v1.0.26 // indirect
 	github.com/qor/assetfs v0.0.0-20170713023933-ff57fdc13a14 // indirect
 	github.com/rainycape/unidecode v0.0.0-20150907023854-cb7f23ec59be // indirect
-	golang.org/x/net v0.25.0 // indirect
+	golang.org/x/net v0.38.0 // indirect
 )
