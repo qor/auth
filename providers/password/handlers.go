@@ -75,6 +75,8 @@ var DefaultRegisterHandler = func(context *auth.Context) (*claims.Claims, error)
 		schema.UID = authInfo.UID
 		schema.Email = authInfo.UID
 		schema.RawInfo = req
+		schema.FirstName = req.Form.Get("first_name")
+		schema.LastName = req.Form.Get("last_name")
 
 		currentUser, authInfo.UserID, err = context.Auth.UserStorer.Save(&schema, context)
 		if err != nil {
@@ -83,7 +85,7 @@ var DefaultRegisterHandler = func(context *auth.Context) (*claims.Claims, error)
 
 		// create auth identity
 		authIdentity := reflect.New(utils.ModelType(context.Auth.Config.AuthIdentityModel)).Interface()
-		if err = tx.Where("provider = ? AND uid = ?", authInfo.Provider, authInfo.UID).FirstOrCreate(authIdentity).Error; err == nil {
+		if err = tx.Where("provider = ? AND uid = ?", authInfo.Provider, authInfo.UID).Attrs("EncryptedPassword", authInfo.EncryptedPassword).Attrs("UserID", authInfo.UserID).Attrs("Provider", authInfo.Provider).Attrs("UID", authInfo.UID).FirstOrCreate(authIdentity).Error; err == nil {
 			if provider.Config.Confirmable {
 				context.SessionStorer.Flash(context.Writer, req, session.Message{Message: ConfirmFlashMessage, Type: "success"})
 				err = provider.Config.ConfirmMailer(schema.Email, context, authInfo.ToClaims(), currentUser)
