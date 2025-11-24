@@ -1,6 +1,6 @@
 module github.com/qor/auth
 
-go 1.23.0
+go 1.24.0
 
 require (
 	github.com/golang-jwt/jwt/v4 v4.5.2
@@ -16,7 +16,7 @@ require (
 	github.com/qor/responder v0.0.0-20171031032654-b6def473574f
 	github.com/qor/roles v0.0.0-20171127035124-d6375609fe3e
 	github.com/qor/session v0.0.0-20170907035918-8206b0adab70
-	golang.org/x/crypto v0.36.0
+	golang.org/x/crypto v0.45.0
 	golang.org/x/oauth2 v0.27.0
 )
 
@@ -35,5 +35,5 @@ require (
 	github.com/microcosm-cc/bluemonday v1.0.26 // indirect
 	github.com/qor/assetfs v0.0.0-20170713023933-ff57fdc13a14 // indirect
 	github.com/rainycape/unidecode v0.0.0-20150907023854-cb7f23ec59be // indirect
-	golang.org/x/net v0.38.0 // indirect
+	golang.org/x/net v0.47.0 // indirect
 )
