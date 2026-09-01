@@ -41,7 +41,6 @@ type SessionStorer struct {
 // Get get claims from request
 func (sessionStorer *SessionStorer) Get(req *http.Request) (*claims.Claims, error) {
 	tokenString := req.Header.Get("Authorization")
-
 	// Get Token from Cookie
 	if tokenString == "" {
 		tokenString = sessionStorer.SessionManager.Get(req, sessionStorer.SessionName)
@@ -83,7 +82,7 @@ func (sessionStorer *SessionStorer) SignedToken(claims *claims.Claims) string {
 // ValidateClaims validate auth token
 func (sessionStorer *SessionStorer) ValidateClaims(tokenString string) (*claims.Claims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &claims.Claims{}, func(token *jwt.Token) (interface{}, error) {
-		if token.Method != sessionStorer.SigningMethod {
+		if token.Method.Alg() != sessionStorer.SigningMethod.Alg() {
 			return nil, fmt.Errorf("unexpected signing method")
 		}
 		return []byte(sessionStorer.SignedString), nil
