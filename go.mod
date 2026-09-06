@@ -1,6 +1,6 @@
 module github.com/qor/auth
 
-go 1.26
+go 1.26.0
 
 require (
 	github.com/golang-jwt/jwt/v4 v4.5.2
@@ -16,7 +16,7 @@ require (
 	github.com/qor/responder v0.0.0-20171031032654-b6def473574f
 	github.com/qor/roles v0.0.0-20171127035124-d6375609fe3e
 	github.com/qor/session v0.0.0-20170907035918-8206b0adab70
-	golang.org/x/crypto v0.55.0
+	golang.org/x/crypto v0.56.0
 	golang.org/x/oauth2 v0.27.0
 )
 
