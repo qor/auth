@@ -2,9 +2,11 @@ package auth
 
 import (
 	"crypto/md5"
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"mime"
+
 	"net/http"
 	"path"
 	"path/filepath"
@@ -25,6 +27,10 @@ func respondAfterLogged(claims *claims.Claims, context *Context) {
 		context.Auth.Redirector.Redirect(context.Writer, context.Request, "login")
 	}).With([]string{"json"}, func() {
 		// TODO write json token
+		var response = map[string]interface{}{}
+		response["access_token"] = context.Auth.SessionStorer.SignedToken(claims)
+		response["success"] = true
+		json.NewEncoder(context.Writer).Encode(&response)
 	}).Respond(context.Request)
 }
 
