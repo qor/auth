@@ -4,6 +4,7 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/jinzhu/copier"
 	"github.com/qor/auth"
 	"github.com/qor/auth/auth_identity"
 	"github.com/qor/auth/claims"
@@ -83,6 +84,7 @@ var DefaultRegisterHandler = func(context *auth.Context) (*claims.Claims, error)
 
 		// create auth identity
 		authIdentity := reflect.New(utils.ModelType(context.Auth.Config.AuthIdentityModel)).Interface()
+		copier.Copy(authIdentity, authInfo)
 		if err = tx.Where("provider = ? AND uid = ?", authInfo.Provider, authInfo.UID).FirstOrCreate(authIdentity).Error; err == nil {
 			if provider.Config.Confirmable {
 				context.SessionStorer.Flash(context.Writer, req, session.Message{Message: ConfirmFlashMessage, Type: "success"})

@@ -31,3 +31,7 @@ func (basic Basic) ToClaims() *claims.Claims {
 	claims.UserID = basic.UserID
 	return &claims
 }
+
+func (basic Basic) DisplayName() string {
+	return basic.UID
+}
